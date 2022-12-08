@@ -2,7 +2,7 @@
 
 Introduction....
 
-![MAPLE Overview](maple_overview.png)
+
 
 
 # Setting up Conda Envirenment
