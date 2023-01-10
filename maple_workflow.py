@@ -1,3 +1,17 @@
+"""
+Main Script that runs the inference workflow pipeline.
+Pre Process
+1. Create watermask
+2. Image Tiling
+Classification
+3. Infer image based on the trained model
+Post processing
+4. Stich image from the tiles (2.)
+
+
+
+"""
+
 
 import shutil
 import argparse
@@ -18,10 +32,14 @@ import mpl_process_shapefile as process
 WORKTAG = 1
 DIETAG = 0
 
-
-
 def tile_image(input_img_name):
+    """
+    Tile the image into multiple pre-deifined sized parts so that the processing can be done on smaller parts due to processing limitations
 
+    Parameters
+    ----------
+    input_img_name : Name of the input image
+    """
     sys.path.append(MPL_Config.ROOT_DIR)
 
     crop_size = MPL_Config.CROP_SIZE
@@ -57,6 +75,13 @@ def tile_image(input_img_name):
     print("finished tiling")
 
 def cal_water_mask(input_img_name):
+    """
+    This will calculate the water mask so that we can avoid (inference) processing of the masked water areas
+
+    Parameters
+    ----------
+    input_img_name : input file name
+    """
     from mpl_config import MPL_Config
     import os
     from osgeo import gdal, ogr
@@ -68,7 +93,6 @@ def cal_water_mask(input_img_name):
     import shutil
     from skimage.morphology import disk
     import cv2
-
 
     image_file_name = (input_img_name).split('.tif')[0]
 
@@ -144,17 +168,15 @@ def cal_water_mask(input_img_name):
     dst_ds.FlushCache()
     dst_ds = None
 
-    #try:
-    #    shutil.rmtree(temp_water_subroot)
-    #except:
-    #    #     print("director deletion failed")
-    #    pass
-
-
-
 
 def infer_image(input_img_name):
+    """
+    Inference based on the trained model reperesented by the saved weights
 
+    Parameters
+    ----------
+    input_img_name : Name of the image file
+    """
     sys.path.append(MPL_Config.ROOT_DIR)
 
     crop_size = MPL_Config.CROP_SIZE
@@ -172,7 +194,6 @@ def infer_image(input_img_name):
     worker_divided_img_subroot = os.path.join(worker_divided_img_root, new_file_name)
 
     print(worker_divided_img_subroot)
-
 
     file1 = (os.path.join(worker_divided_img_subroot, 'image_data.h5'))
     file2 = (os.path.join(worker_divided_img_subroot, 'image_param.h5'))
@@ -193,30 +214,34 @@ def infer_image(input_img_name):
                               weights_path,
                               worker_output_shp_subroot, file1, file2,new_file_name)
 
-#    try:
-#        shutil.rmtree(worker_divided_img_subroot)
-
-#    except:
-        #     print("director deletion failed")
-#        pass
     print("done")
 
 
 
 
 def stich_shapefile(input_img_name):
+    """
+    Put (stich) the image tiles back to the original
 
+    Parameters
+    ----------
+    input_img_name : input file name
+
+    Returns
+    -------
+
+    """
     sys.path.append(MPL_Config.ROOT_DIR)
 
     crop_size = MPL_Config.CROP_SIZE
 
-    # worker roots
+    # worker roots - location to put the tiled files
     worker_img_root = MPL_Config.INPUT_IMAGE_DIR
 
     worker_finaloutput_root =  MPL_Config.FINAL_SHP_DIR
     worker_output_shp_root = MPL_Config.OUTPUT_SHP_DIR
 
-    # Create subfolder for each image
+    # Create subfolder for each image within the worker img root
     new_file_name = input_img_name.split('.tif')[0]
 
     worker_finaloutput_subroot = os.path.join(worker_finaloutput_root, new_file_name)
@@ -236,9 +261,6 @@ def stich_shapefile(input_img_name):
                             worker_finaloutput_subroot, new_file_name,new_file_name)
 
     return "done Divide"
-
-
-
 
 #############################################################
 parser = argparse.ArgumentParser(
