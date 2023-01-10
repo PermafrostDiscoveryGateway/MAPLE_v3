@@ -73,15 +73,17 @@ def unit_test():
     create_dir_path('./data4/final_shp/test_image_01/')
 
 from mpl_config import MPL_Config
-#Create dir structure
-# └── data
-#     ├── divided_img
-#     ├── final_shp
-#     ├── input_img_local
-#     ├── output_img
-#     ├── output_shp
-#     └── water_mask
-#         └── temp
+# Created dir structure that is required for the maple workflow
+# data
+# ├── divided_img
+# ├── final_shp
+# ├── input_img_local
+# ├── neighbors
+# ├── output_img
+# ├── output_shp
+# └── water_mask
+#     └── temp
+
 create_dir_path(MPL_Config.INPUT_IMAGE_DIR)
 create_dir_path(MPL_Config.INPUT_IMAGE_DIR)
 create_dir_path(MPL_Config.DIVIDED_IMAGE_DIR)
@@ -94,9 +96,9 @@ create_dir_path(MPL_Config.WORKER_ROOT)
 create_dir_path(os.path.join(MPL_Config.WORKER_ROOT,'neighbors/'))
 create_dir_path(os.path.join(MPL_Config.ROOT_DIR,'projected_shp/'))
 
-# Copy required files data set and the weight files NOT RECOMENDED as the files will be large.
-# Better to point to the location via in the mpl_config
-# works only in the local machine with hardcoded paths given as an exmple to set up your environment.
+# Copy required files data set and the weight files  NOT RECOMMENDED as the files will be large.
+# Better to point to the location via the mpl_config
+# works only in the local machine with hardcoded paths given as an example to set up your environment.
 # ├── data
 # │ ├── divided_img
 # │ ├── final_shp
