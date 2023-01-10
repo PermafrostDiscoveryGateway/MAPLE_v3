@@ -1,7 +1,7 @@
 
 from config import Config
 class MPL_Config(object):
-    ROOT_DIR = r'/mnt/data/Rajitha/MAPLE/MAPLE'
+    ROOT_DIR = r'/home/bizon/amal/code/mpl_wkflow/'
 
     ## Do not change this section
     #-----------------------------------------------------------------

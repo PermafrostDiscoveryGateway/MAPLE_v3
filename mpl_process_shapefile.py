@@ -33,7 +33,15 @@ def process_shapefile(image_name):
     except:
         print("director deletion failed")
         pass
-    os.mkdir(temp_dir)
+    #CODE updated -amal
+    try:
+        os.makedirs(temp_dir)
+    except FileExistsError:
+        # print(temp_dir,':directory already exists')
+        pass
+    # code updted to create directory -amal
+    # Origianl code
+    # os.mkdir(temp_dir)
 
     w = shapefile.Writer(output_shape_file)
 
@@ -48,7 +56,13 @@ def process_shapefile(image_name):
     except:
         print("director deletion failed")
         pass
-    os.mkdir(projected_dir)
+
+    try:
+        os.makedirs(projected_dir)
+    except FileExistsError:
+        # print(projected_dir,':directory already exists')
+        pass
+    # os.mkdir(projected_dir)
 
     w.fields = r.fields[1:]  # skip first deletion field
 
