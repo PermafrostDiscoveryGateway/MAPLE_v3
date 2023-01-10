@@ -12,6 +12,7 @@ def copy_path(*,src, dst, dir_mode=0o777, follow_symlinks: bool = True):
     """
     Copy a source filesystem path to a destination path, creating parent
     directories if they don't exist.
+    This tries to use shutil.copy2 until it has required paths created by os.mkdir to copy the files
 
     Args:
         src: The source filesystem path to copy. This must exist on the
@@ -43,7 +44,7 @@ def copy_path(*,src, dst, dir_mode=0o777, follow_symlinks: bool = True):
 
 def create_dir_path(dir_path):
     """
-    Create a required directory path
+    Create a required directory path if it does NOT exist.
 
     Args:
         src: The source filesystem path to copy. This must exist on the
@@ -65,7 +66,6 @@ import unittest
     #
     # if __name__ == '__main__':
     #     unittest.main()
-
 
 def unit_test():
     print(copy_path(src='../data/final_shp/test_image_01/test_image_01.dbf',dst='./final_shp/test_image_01/'))
