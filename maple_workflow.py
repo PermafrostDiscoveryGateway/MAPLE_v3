@@ -75,7 +75,7 @@ def tile_image(input_img_name):
 
 def cal_water_mask(input_img_name):
     """
-    This will calculate the water mask so that we can avoid (inference) processing of the masked areas with water
+    This will calculate the water mask to avoid (inference) processing of the masked areas with water
 
     Parameters
     ----------
