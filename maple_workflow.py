@@ -1,14 +1,12 @@
 """
 Main Script that runs the inference workflow pipeline.
 Pre Process
-1. Create watermask
+1. Create water mask
 2. Image Tiling
 Classification
-3. Infer image based on the trained model
+3. Infer images based on the trained model
 Post processing
 4. Stich image from the tiles (2.)
-
-
 
 """
 
@@ -34,7 +32,8 @@ DIETAG = 0
 
 def tile_image(input_img_name):
     """
-    Tile the image into multiple pre-deifined sized parts so that the processing can be done on smaller parts due to processing limitations
+    Tile the image into multiple pre-deifined sized parts so that the processing can be done on smaller parts due to
+    processing limitations
 
     Parameters
     ----------
@@ -61,7 +60,7 @@ def tile_image(input_img_name):
     try:
         shutil.rmtree(worker_divided_img_subroot)
     except:
-        print("director deletion failed")
+        print("directory deletion failed")
         pass
     os.mkdir(worker_divided_img_subroot)
 
@@ -76,11 +75,11 @@ def tile_image(input_img_name):
 
 def cal_water_mask(input_img_name):
     """
-    This will calculate the water mask so that we can avoid (inference) processing of the masked water areas
+    This will calculate the water mask so that we can avoid (inference) processing of the masked areas with water
 
     Parameters
     ----------
-    input_img_name : input file name
+    input_img_name : Name of the input image
     """
     from mpl_config import MPL_Config
     import os
@@ -97,8 +96,8 @@ def cal_water_mask(input_img_name):
     image_file_name = (input_img_name).split('.tif')[0]
 
     worker_root = MPL_Config.WORKER_ROOT
-    worker_water_root = MPL_Config.WATER_MASK_DIR #  os.path.join(worker_root, "water_shp")
-    temp_water_root =  MPL_Config.TEMP_W_IMG_DIR#os.path.join(worker_root, "temp_8bitmask")
+    worker_water_root = MPL_Config.WATER_MASK_DIR  #os.path.join(worker_root, "water_shp")
+    temp_water_root =  MPL_Config.TEMP_W_IMG_DIR   #os.path.join(worker_root, "temp_8bitmask")
 
     ouput_image = os.path.join(MPL_Config.OUTPUT_IMAGE_DIR,"%s.tif"%image_file_name)
 
@@ -107,15 +106,14 @@ def cal_water_mask(input_img_name):
 
     try:
         shutil.rmtree(worker_water_subroot)
-
     except:
-  #      print("director deletion failed")
+  #      print("directory deletion failed")
         pass
 
     try:
        shutil.rmtree(temp_water_subroot)
     except:
-   #     print("director deletion failed")
+   #     print("directory deletion failed")
         pass
 
         # check local storage for temporary storage
@@ -128,12 +126,24 @@ def cal_water_mask(input_img_name):
 
     input_image = os.path.join(MPL_Config.INPUT_IMAGE_DIR, input_img_name)
 
+    #print("input file path: %s output file path %s" %(input_image, output_tif_8b_file))
     # %% Median and Otsu
     value = 5
     clips = []
 
-    cmd = "gdal_translate -ot Byte -of GTiff %s %s" % (input_image, output_tif_8b_file)
-    os.system(cmd)
+    #ORIGINAL CODE---------------------------------------
+    #cmd = "gdal_translate -ot Byte -of GTiff %s %s" % (input_image, output_tif_8b_file)
+
+    ### UPDATED CODE - amal 01/11/2023
+    # cmd line execution thrown exceptions unable to capture
+    # Using gdal to execute the gdal_Translate
+    # output file checked against the cmd line gdal_translate
+    gdal.UseExceptions()  # Enable errors
+    try:
+        gdal.Translate(srcDS=input_image,destName=output_tif_8b_file,format="GTiff",outputType=gdal.GDT_Byte)
+    except RuntimeError:
+        print("gdal Translate failed with",gdal.GetLastErrorMsg())
+        pass
 
     image = skimage.io.imread(output_tif_8b_file)  # image[rows, columns, dimensions]-> image[:,:,3] is near Infrared
     nir = image[:, :, nir_band]
@@ -175,7 +185,7 @@ def infer_image(input_img_name):
 
     Parameters
     ----------
-    input_img_name : Name of the image file
+    input_img_name : Name of the input image file
     """
     sys.path.append(MPL_Config.ROOT_DIR)
 
@@ -204,7 +214,7 @@ def infer_image(input_img_name):
         shutil.rmtree(worker_output_shp_subroot)
 
     except:
-        print("director deletion failed")
+        print("directory deletion failed")
         pass
 
     POLYGON_DIR = worker_root
@@ -225,7 +235,7 @@ def stich_shapefile(input_img_name):
 
     Parameters
     ----------
-    input_img_name : input file name
+    input_img_name : Name of the input image file
 
     Returns
     -------
@@ -251,7 +261,7 @@ def stich_shapefile(input_img_name):
     try:
         shutil.rmtree(worker_finaloutput_subroot)
     except:
-        print("director deletion failed")
+        print("directory deletion failed")
         pass
     os.mkdir(worker_finaloutput_subroot)
 
@@ -262,7 +272,9 @@ def stich_shapefile(input_img_name):
 
     return "done Divide"
 
-#############################################################
+##############--MAIN SCRIPT--##########################################################################################
+#if __name__ == '__main__':
+
 parser = argparse.ArgumentParser(
     description='Train Mask R-CNN to detect balloons.')
 
