@@ -76,7 +76,7 @@ def tile_image(input_img_name):
 def cal_water_mask(input_img_name):
     """
     This will calculate the water mask to avoid (inference) processing of the masked areas with water
-
+    Uses gdal to transform the image into the required format.
     Parameters
     ----------
     input_img_name : Name of the input image
@@ -103,7 +103,7 @@ def cal_water_mask(input_img_name):
 
     worker_water_subroot = os.path.join(worker_water_root, image_file_name)
     temp_water_subroot = os.path.join(temp_water_root, image_file_name)
-
+# Prepare to make directories to create the files
     try:
         shutil.rmtree(worker_water_subroot)
     except:
@@ -140,7 +140,7 @@ def cal_water_mask(input_img_name):
     # output file checked against the cmd line gdal_translate
     gdal.UseExceptions()  # Enable errors
     try:
-        gdal.Translate(srcDS=input_image,destName=output_tif_8b_file,format="GTiff",outputType=gdal.GDT_Byte)
+        gdal.Translate(destName=output_tif_8b_file,srcDS=input_image,format="GTiff",outputType=gdal.GDT_Byte)
     except RuntimeError:
         print("gdal Translate failed with",gdal.GetLastErrorMsg())
         pass
