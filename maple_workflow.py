@@ -296,3 +296,6 @@ infer_image(image_name)
 print("start stiching")
 stich_shapefile(image_name)
 process.process_shapefile(image_name)
+
+# Once you are done you can check the output on ArcGIS (win) or else you can check in QGIS (nx) Add the image and the
+# shp, shx, dbf as layers.

@@ -1,4 +1,9 @@
 #!/usr/bin/python3
+"""
+Inference using the Mask RCNN
+
+"""
+
 
 import time
 import queue
@@ -176,9 +181,6 @@ class Predictor(multiprocessing.Process):
         dbfile.close()
         w_final.close()
 
-
-
-
 def inference_image(POLYGON_DIR,
                     weights_path,
                     output_shp_root,
@@ -212,12 +214,8 @@ def inference_image(POLYGON_DIR,
                       len_imgs,image_name)
         p_list.append(p)
 
-
-
-
     for p in p_list:
         p.start()
-
 
 
     for img in range(int(len_imgs)):

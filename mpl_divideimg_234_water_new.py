@@ -1,3 +1,7 @@
+"""
+Script that breaks the image into smaller chunks (tiles)
+
+"""
 import os
 from osgeo import osr, gdal,ogr
 import shapefile as shp
@@ -9,6 +13,16 @@ import cv2
 
 def divide_image(input_image_path,    # the image directory
                  target_blocksize, file1, file2):   # the crop size
+    """
+    Script that breaks the image into smaller chunks (tiles)
+    The script will zero out the water based on the water mask created for this input file
+    and break the file into multiple tiles (target block x target block)
+
+    input_image_path = original image
+    target_blocksize =
+    file1
+    file2
+    """
 
     worker_root = MPL_Config.WORKER_ROOT
     water_dir = MPL_Config.WATER_MASK_DIR
@@ -36,7 +50,7 @@ def divide_image(input_image_path,    # the image directory
     brx = ulx + x_resolution*XSize
     bry = uly + y_resolution*YSize
 
-    # ---------------------- crop image ----------------------
+    # ---------------------- crop image from the water mask----------------------
     #img_band1 = IMG1.GetRasterBand(1)
     img_band2 = IMG1.GetRasterBand(2)
     img_band3 = IMG1.GetRasterBand(3)
@@ -64,7 +78,7 @@ def divide_image(input_image_path,    # the image directory
     # ulx, uly is the upper left corner
     ulx, x_resolution, _, uly, _, y_resolution  = transform
 
-    # ---------------------- Divide image ----------------------
+    # ---------------------- Divide image (tile) ----------------------
     overlap_rate = 0.2
     block_size = target_blocksize
     ysize = rows_input
@@ -81,7 +95,14 @@ def divide_image(input_image_path,    # the image directory
     y_list = range(0, ysize, int(block_size*(1-overlap_rate)))
     x_list = range(0, xsize, int(block_size*(1-overlap_rate)))
     dict_n['total'] = [len(y_list),len(x_list)]
+
     # ---------------------- Find each Upper left (x,y) for each images ----------------------
+    #  ***-----------------
+    #  ***
+    #  ***
+    #  |
+    #  |
+    #
     for id_i,i in enumerate(y_list):
 
         # don't want moving window to be larger than row size of input raster
@@ -115,7 +136,6 @@ def divide_image(input_image_path,    # the image directory
 
             #print(dict_n[tile_count])
 
-
             # stack three bands into one array
             img = np.stack((band_1_array, band_2_array, band_3_array), axis=2)
             cv2.normalize(img, img, 0, 255, cv2.NORM_MINMAX)
@@ -136,9 +156,9 @@ def divide_image(input_image_path,    # the image directory
             f1.create_dataset(f"image_{image_count}", data=final_image)
             f2.create_dataset(f"param_{image_count}", data=data_c)
             tile_count += 1
+    # --------------- Store all the title as an object file
     values = np.array([x_resolution, y_resolution, image_count])
     f2.create_dataset("values",data=values)
-
     import pickle
     db_file_path = os.path.join(worker_root, "neighbors/%s_ij_dict.pkl" % new_file_name)
     dbfile = open(db_file_path, 'wb')

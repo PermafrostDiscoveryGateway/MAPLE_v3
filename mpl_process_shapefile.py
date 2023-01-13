@@ -118,6 +118,7 @@ def process_shapefile(image_name):
     os.mkdir(projected_dir)
 
     cmd = "ogr2ogr %s -a_srs 'EPSG:3413' %s"%(projected_shape_file,output_shape_file)
+    print(cmd)
     os.system(cmd)
 
 
