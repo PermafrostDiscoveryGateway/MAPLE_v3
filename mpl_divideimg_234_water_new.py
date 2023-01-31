@@ -39,6 +39,15 @@ def divide_image(input_image_path,    # the image directory
     mask_arry = mask_band.ReadAsArray()
 
     print(input_image_path)
+    # convert the original image into the geo cordinates for further processing using gdal
+    # https://gdal.org/tutorials/geotransforms_tut.html
+    #GT(0) x-coordinate of the upper-left corner of the upper-left pixel.
+    #GT(1) w-e pixel resolution / pixel width.
+    #GT(2) row rotation (typically zero).
+    #GT(3) y-coordinate of the upper-left corner of the upper-left pixel.
+    #GT(4) column rotation (typically zero).
+    #GT(5) n-s pixel resolution / pixel height (negative value for a north-up image).
+
     IMG1 = gdal.Open(input_image_path)
     gt1 = IMG1.GetGeoTransform()
 
@@ -51,6 +60,10 @@ def divide_image(input_image_path,    # the image directory
     bry = uly + y_resolution*YSize
 
     # ---------------------- crop image from the water mask----------------------
+    # dot product of the mask and the orignal data before breaking it for processing
+    # Also band 2 3 and 4 are taken because the 4 bands cannot be processed by the NN learingin algo
+    # Need to make sure that the training bands are the same as the bands used for inferencing. 
+    #
     #img_band1 = IMG1.GetRasterBand(1)
     img_band2 = IMG1.GetRasterBand(2)
     img_band3 = IMG1.GetRasterBand(3)
@@ -65,6 +78,8 @@ def divide_image(input_image_path,    # the image directory
     final_array_3 = np.multiply(final_array_3, mask_arry)
     final_array_4 = np.multiply(final_array_4, mask_arry)
 
+    # files to store the masked and divided data. Will be stored in a directory named with the orignal file and sub directory <divided_img>
+    # Two object files are created one for the parameters <image_param>  and the other for the data <image_data>. 
     f1 = h5py.File(file1, "w")
     f2 = h5py.File(file2, "w")
 
@@ -96,7 +111,7 @@ def divide_image(input_image_path,    # the image directory
     x_list = range(0, xsize, int(block_size*(1-overlap_rate)))
     dict_n['total'] = [len(y_list),len(x_list)]
 
-    # ---------------------- Find each Upper left (x,y) for each images ----------------------
+    # ---------------------- Find each Upper left (x,y) for each divided images ----------------------
     #  ***-----------------
     #  ***
     #  ***
@@ -152,7 +167,7 @@ def divide_image(input_image_path,    # the image directory
 
             data_c = np.array([i,j,ul_row_divided_img,ul_col_divided_img,tile_count])
             image_count += 1
-
+            # Add tile into the data object data and the paremeters
             f1.create_dataset(f"image_{image_count}", data=final_image)
             f2.create_dataset(f"param_{image_count}", data=data_c)
             tile_count += 1
