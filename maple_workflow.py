@@ -67,7 +67,10 @@ def tile_image(input_img_name):
 
     file1 = (os.path.join(worker_divided_img_subroot, 'image_data.h5'))
     file2 = (os.path.join(worker_divided_img_subroot, 'image_param.h5'))
-
+    #----------------------------------------------------------------------------------------------------
+    # Call divide image <mpl_divided_img_water> to put the water mask and also to tile and store the data
+    # Multiple image overlaps are NOT taken into account in called code.
+    # 
     divide.divide_image(input_img_path, crop_size,
                         file1, file2)
 
