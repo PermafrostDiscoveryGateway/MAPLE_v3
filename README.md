@@ -23,12 +23,31 @@ The code is scripted using python and for execution the proper python env should
   - scikit-image==0.16.2
   - shapely==1.6.4
 
-Mske sure conda is used rather than pip to install as the conda will let you know if their are conflict in the envirenment. Some of the above a pythonwrappers to libraries that may have issues in the particular envirenment you are running it. [More details](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-conda.html)
+Mske sure conda is used rather than pip to install as the conda will let you know if their are conflict in the envirenment. Some of the above a pythonwrappers to libraries that may have issues in the particular envirenment you are running it. [More details about conda managment can be found](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-conda.html)
 
-#Running MAPLE
+
+# Running MAPLE
+
+To execute maple you need to run the workflow. Depending on the location where you are runing you may need to write some code to generate a batch script to be deployed on the compute nodes some examples are avaialble to get started.
+
+## Configuration
+Multiple configurations are possible based on the compute envirenment and also the input data to be processed.
+It is required to maintain the model based configurations to ensure you get an output that is consistent to the training done. The most important configuration is to indicate the location of the weight file
+
+It is recomended not to edit the main config file but to have our own config file to modify the configuration based on our requirements. You can edit the maple_config.py file with all the required parameters that include the location of the data and the locations of the output files and also the locations to store the temporary files. Since most of the HPCs do not allow us to store large files we have to use common location for the files.
+
+As it is wirtten you need to create a directory structure based on the config file to store the temp data. A small pythen script is written  to generate this structure but make sure it mathches the configuration. Otherwise errors will be thrown in certain cases and may not in certain cases.
+
 
 ## Preparing Data
 
+Data can be in geo tagged tiff files. Have the option of running it by pointing it to a input data directory that contains the files that you want executed or you can give a list of files to be executed. There is also an option to use a collection of overlap shapefiles related a to a batch of input files that inidicates the overlaps so that the processing of overalped input images can be avoided.
+
+As part of the data preperation
+Basic for the basic vanila configuration you only need a list of input tiff files in a directory
+
 <h2 id="weight-file"> Weight File </h2>
 
-## Configuration
+
+
+
