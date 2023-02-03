@@ -38,6 +38,22 @@ It is recomended not to edit the main config file but to have our own config fil
 
 As it is wirtten you need to create a directory structure based on the config file to store the temp data. A small [pythen script](mpl_inf_create_dir_structure.py) is written  to generate this structure but make sure it mathches the configuration. Otherwise errors will be thrown in certain cases and may not in certain cases.
 
+The following directory structure and the files must be there to run
+
+├── data
+│ ├── divided_img
+│ ├── final_shp
+│ ├── input_img_local
+│ │    └── test_image_01.tif
+│ ├── output_img
+│ ├── output_shp
+│ └── water_mask
+│    └── temp
+└── trained_weights_Dataset_251_13_24_.h5
+
+Root directory where this structure is located should also be given in the maple_configuration file. 
+
+For HPC execution you also need to indicate the .out .err locations for it to get it executed as a batch job.
 
 ## Preparing Data
 
