@@ -14,9 +14,7 @@ Expects the cleaning artifacts to be in a single folder and will go through all 
 have only one feature (dissolved) if multi feature it will take the first feature and continue with a warning
 
 Since combining the cleaning data (Union) take time, it advisable to run this for a batch of files.
-
 Author amal.perera@uconn.edu
-
 """
 import sys
 from osgeo import ogr
