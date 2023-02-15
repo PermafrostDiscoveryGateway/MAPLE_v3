@@ -5,8 +5,8 @@ This is the configuration file for maple workflow
 (2) indicates the local environment to execute the workflow i.e where files are located
 
 Project: Permafrost Discovery Gateway: Mapping Application for Arctic Permafrost Land Environment(MAPLE)
-PI: Chandi Witharana
-Author: Rajitha Udwalpola
+PI      : Chandi Witharana
+Author  : Rajitha Udwalpola
 """
 
 from config import Config

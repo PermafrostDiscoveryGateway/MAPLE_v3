@@ -5,14 +5,14 @@ Pre Process
 1. Create water mask
 2. Image Tiling
 Classification / Inference
-3. Infer images based on the trained model
+3. Infer "ground truth" from images based on the trained model
 Post processing
-4. Stich image from the tiles (2.)
+4. Stich back to the original image dims from the tiles (2.)
 5. Clean the output based on known ground truth
 
 Project: Permafrost Discovery Gateway: Mapping Application for Arctic Permafrost Land Environment(MAPLE)
-PI: Chandi Witharana
-Author: Rajitha Udwalpola
+PI      : Chandi Witharana
+Author  : Rajitha Udwalpola
 """
 
 import shutil

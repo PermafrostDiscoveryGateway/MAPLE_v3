@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 #env maple
-
 """
-Code base to clean the inferences from known artifacts
+MAPLE Workflow
+(5) Code base to clean the inferences from known artifacts.
 
 This code will take as input shape files with known artifacts and do an intersect with infered shape file and remove if
 they fall into a known artifact.
@@ -14,7 +14,10 @@ Expects the cleaning artifacts to be in a single folder and will go through all 
 have only one feature (dissolved) if multi feature it will take the first feature and continue with a warning
 
 Since combining the cleaning data (Union) take time, it advisable to run this for a batch of files.
-Author amal.perera@uconn.edu
+
+Project: Permafrost Discovery Gateway: Mapping Application for Arctic Permafrost Land Environment(MAPLE)
+PI      : Chandi Witharana
+Author  : Amal Shehan Perera
 """
 import sys
 from osgeo import ogr

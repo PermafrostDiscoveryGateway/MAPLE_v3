@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
-
-""" Run this script on local machine rather than AWS ec2
 """
+MAPLE Workflow
+(4) Post process the inferences into a standard shape file that can be processed further (Final Product)
+Will create .shp / .dbf / .shx and .prj files in the data/final_shp directory
+
+Project: Permafrost Discovery Gateway: Mapping Application for Arctic Permafrost Land Environment(MAPLE)
+PI      : Chandi Witharana
+Author  : Rajitha Udwalpola
+"""
+
 import shapefile
 import os.path, os
 import shutil
@@ -12,8 +19,6 @@ from scipy.spatial import distance
 import numpy as np
 import random
 from collections import defaultdict
-# input path
-#root_dir = "/media/outputs/Alaska/data_167_168"
 
 def process_shapefile(image_name):
     data_dir = MPL_Config.WORKER_ROOT

@@ -1,7 +1,12 @@
 """
-Script that breaks the image into smaller chunks (tiles)
+MAPLE Workflow
+(2) Script that breaks the image into smaller chunks (tiles)
 
+Project: Permafrost Discovery Gateway: Mapping Application for Arctic Permafrost Land Environment(MAPLE)
+PI      : Chandi Witharana
+Author  : Rajitha Udwalpola
 """
+
 import os
 from osgeo import osr, gdal,ogr
 import shapefile as shp
@@ -10,20 +15,18 @@ import h5py
 from mpl_config import  MPL_Config
 import cv2
 
-
 def divide_image(input_image_path,    # the image directory
-                 target_blocksize, file1, file2):   # the crop size
+                 target_blocksize,    # the crop size
+                 file1, file2):       # cropped tile meta info, cropped file
     """
     Script that breaks the image into smaller chunks (tiles)
     The script will zero out the water based on the water mask created for this input file
     and break the file into multiple tiles (target block x target block)
 
-    input_image_path = original image
-    target_blocksize =
-    file1
-    file2
+    NOTE: Cropped files are packed into one h5p file
+    file1 : Keeps meta info on how to load file 2
+    file2 : Cropped tiles
     """
-
     worker_root = MPL_Config.WORKER_ROOT
     water_dir = MPL_Config.WATER_MASK_DIR
 
@@ -78,7 +81,8 @@ def divide_image(input_image_path,    # the image directory
     final_array_3 = np.multiply(final_array_3, mask_arry)
     final_array_4 = np.multiply(final_array_4, mask_arry)
 
-    # files to store the masked and divided data. Will be stored in a directory named with the orignal file and sub directory <divided_img>
+    # files to store the masked and divided data. Will be stored in a directory named with the orignal
+    # file and sub directory <divided_img>
     # Two object files are created one for the parameters <image_param>  and the other for the data <image_data>. 
     f1 = h5py.File(file1, "w")
     f2 = h5py.File(file2, "w")
@@ -186,5 +190,3 @@ def divide_image(input_image_path,    # the image directory
     dbfile.close()
     f1.close()
     f2.close()
-
-

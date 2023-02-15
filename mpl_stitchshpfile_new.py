@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
-
-""" Run this script on local machine rather than AWS ec2
 """
+MAPLE Workflow
+(4) Stich back to the original image dims from the tiles created by the inference process
+Project: Permafrost Discovery Gateway: Mapping Application for Arctic Permafrost Land Environment(MAPLE)
+PI      : Chandi Witharana
+Author  : Rajitha Udwalpola
+"""
+
 import shapefile
 import os.path, os
 from shapely.geometry import Polygon

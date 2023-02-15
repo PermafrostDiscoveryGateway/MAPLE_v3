@@ -3,7 +3,12 @@
     This script to be run once prior to the executing the workflow for the first time.
     This was created to make sure the all the required files and directories are in place.
     This code was tested only on local execution.
-    """
+    MAPLE Workflow
+
+Project: Permafrost Discovery Gateway: Mapping Application for Arctic Permafrost Land Environment(MAPLE)
+PI      : Chandi Witharana
+Author  : Amal Shehan Perera
+"""
 
 import os
 import shutil
