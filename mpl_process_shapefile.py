@@ -15,7 +15,6 @@ from collections import defaultdict
 # input path
 #root_dir = "/media/outputs/Alaska/data_167_168"
 
-
 def process_shapefile(image_name):
     data_dir = MPL_Config.WORKER_ROOT
     image_file_name = (image_name).split('.tif')[0]

@@ -1,15 +1,19 @@
 """
+MAPLE Workflow
 Main Script that runs the inference workflow pipeline.
 Pre Process
 1. Create water mask
 2. Image Tiling
-Classification
+Classification / Inference
 3. Infer images based on the trained model
 Post processing
 4. Stich image from the tiles (2.)
+5. Clean the output based on known ground truth
 
+Project: Permafrost Discovery Gateway: Mapping Application for Arctic Permafrost Land Environment(MAPLE)
+PI: Chandi Witharana
+Author: Rajitha Udwalpola
 """
-
 
 import shutil
 import argparse
@@ -25,6 +29,7 @@ import mpl_infer_tiles_GPU_new as inference
 import sys
 import mpl_stitchshpfile_new as stich
 import mpl_process_shapefile as process
+import mpl_clean_inference as inf_clean
 
 # work tag
 WORKTAG = 1
@@ -290,15 +295,19 @@ args = parser.parse_args()
 
 image_name = args.image
 
-print("start caculating wartermask")
+print("1.start caculating wartermask")
 cal_water_mask(image_name)
-print("start tiling image")
+print("2. start tiling image")
 tile_image(image_name)
-print("start inferencing")
+print("3. start inferencing")
 infer_image(image_name)
-print("start stiching")
+print("4. start stiching")
 stich_shapefile(image_name)
 process.process_shapefile(image_name)
+print("5. start cleaning")
+inf_clean.clean_inference_shapes(MPL_Config.CLEAN_DATA_DIR,
+                       MPL_Config.FINAL_SHP_DIR,
+                       "./data/input_bound/sample2_out_boundry.shp")
 
 # Once you are done you can check the output on ArcGIS (win) or else you can check in QGIS (nx) Add the image and the
 # shp, shx, dbf as layers.

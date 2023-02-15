@@ -36,7 +36,7 @@ It is required to maintain the model based configurations to ensure you get an o
 
 It is recomended not to edit the main config file but to have our own config file to modify the configuration based on our requirements. You can edit the maple_config.py file with all the required parameters that include the location of the data and the locations of the output files and also the locations to store the temporary files. Since most of the HPCs do not allow us to store large files we have to use common location for the files.
 
-As it is wirtten you need to create a directory structure based on the config file to store the temp data. A small [pythen script](mpl_inf_create_dir_structure.py) is written  to generate this structure but make sure it mathches the configuration. Otherwise errors will be thrown in certain cases and may not in certain cases.
+As it is wirtten you need to create a directory structure based on the config file to store the temp data. A small [pythen script](mpl_wokflow_create_dir_struct.py) is written  to generate this structure but make sure it mathches the configuration. Otherwise errors will be thrown in certain cases and may not in certain cases.
 
 The following directory structure and the files must be there to run
 

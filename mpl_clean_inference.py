@@ -31,7 +31,7 @@ VERBOSE_granularity=10000 # output print frequency for deleting loops 0 will hav
 
 def clean_inference_shapes(clean_data_dir="./data/cln_data",
                            input_data_dir="./data/final_shp",
-                           input_data_boundary_file_path="./data/cvg_data/sample2_out_boundry.shp",
+                           input_data_boundary_file_path="./data/input_bound/sample2_out_boundry.shp",
                            ):
     """
         Clean Known false positives (mis-classified) Polygons from shape files. Based on know ground truth
@@ -81,6 +81,7 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
 
     # LOAD : AND INTERSECT the boundary aka feature envelope of the input files to reduce the processing
     #drv = ogr.GetDriverByName('ESRI Shapefile')
+    print("input data boundry file path:",input_data_boundary_file_path)
     if (os.path.isfile(input_data_boundary_file_path)):
         dboundry = drv.Open(input_data_boundary_file_path,False)  #False as we are NOT editing the file
         dboundry_lyr = dboundry.GetLayer()
@@ -98,8 +99,8 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
     print("List of input data directories selected to PROCESS:CLEAN:\n")
     print(*input_data_fps,sep="\n")
 
-    # for testing take only few files
-    input_data_fps=input_data_fps[0:1]
+    # FOR testing if you want to take only few files
+    # input_data_fps=input_data_fps[0:1]
 
     for fp in input_data_fps:
         # LOAD : READ each input file given
@@ -113,8 +114,7 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
         st_cpu = time.process_time()
         # Go through all features and remove them if it falls within the filter_geom
         for fid in range(s_lyr.GetFeatureCount()): # READ all features in the input file to check and remove
-        #for fid in [6064,6065,6066,6067,6068,14270,14271,14272,14273,14274,14275]: # For testing on sample2_org.shp
-        # 50% split
+
             s_feature=s_lyr.GetFeature(fid)
 
             # OPTION:1 Creating a point shape Using the centroid from the input file to check
@@ -146,8 +146,9 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
         print("CPU Time for deleting {}".format(nd_cpu-st_cpu))
         # </TIME>#######################################################
 
-############################## MAIN CODE block to be customized to envirenemnt ##########################
-from mpl_config import MPL_Config
-clean_inference_shapes(MPL_Config.CLEAN_DATA_DIR,
-                       MPL_Config.FINAL_SHP_DIR,
-                       "./data/cvg_data/sample2_out_boundry.shp")
+############################## MAIN CODE block to be customized to envirenemnt if requied ##########################
+# Not required since it is called from the workflow
+# from mpl_config import MPL_Config
+# clean_inference_shapes(MPL_Config.CLEAN_DATA_DIR,
+#                        MPL_Config.FINAL_SHP_DIR,
+#                        "./data/cvg_data/sample2_out_boundry.shp")

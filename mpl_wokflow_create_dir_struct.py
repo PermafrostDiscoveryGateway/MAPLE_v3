@@ -13,7 +13,6 @@ def copy_path(*,src, dst, dir_mode=0o777, follow_symlinks: bool = True):
     Copy a source filesystem path to a destination path, creating parent
     directories if they don't exist.
     This tries to use shutil.copy2 until it has required paths created by os.mkdir to copy the files
-
     Args:
         src: The source filesystem path to copy. This must exist on the
             filesystem.
@@ -60,13 +59,6 @@ def create_dir_path(dir_path):
 
 import unittest
 
-    # class TestAdd(unittest.TestCase):
-    #         def test_add(self):
-    #             self.assertEqual(functions.add(2, 4), 6)
-    #
-    # if __name__ == '__main__':
-    #     unittest.main()
-
 def unit_test():
     print(copy_path(src='../data/final_shp/test_image_01/test_image_01.dbf',dst='./final_shp/test_image_01/'))
     create_dir_path('./data4/final_shp/test_image_01/')
@@ -74,17 +66,18 @@ def unit_test():
 
 from mpl_config import MPL_Config
 # Created dir structure that is required for the maple workflow
-# data
+# data/
+# ├── cln_data
 # ├── divided_img
 # ├── final_shp
 # ├── input_img_local
 # ├── neighbors
 # ├── output_img
 # ├── output_shp
+# ├── projected_shp
 # └── water_mask
 #     └── temp
 
-create_dir_path(MPL_Config.INPUT_IMAGE_DIR)
 create_dir_path(MPL_Config.INPUT_IMAGE_DIR)
 create_dir_path(MPL_Config.DIVIDED_IMAGE_DIR)
 create_dir_path(MPL_Config.OUTPUT_SHP_DIR)
@@ -92,14 +85,16 @@ create_dir_path(MPL_Config.FINAL_SHP_DIR)
 create_dir_path(MPL_Config.WATER_MASK_DIR)
 create_dir_path(MPL_Config.TEMP_W_IMG_DIR)
 create_dir_path(MPL_Config.OUTPUT_IMAGE_DIR)
-create_dir_path(MPL_Config.WORKER_ROOT)
 create_dir_path(os.path.join(MPL_Config.WORKER_ROOT,'neighbors/'))
-create_dir_path(os.path.join(MPL_Config.ROOT_DIR,'projected_shp/'))
+create_dir_path(os.path.join(MPL_Config.WORKER_ROOT,'projected_shp/'))
+
+create_dir_path(MPL_Config.CLEAN_DATA_DIR)
 
 # Copy required files data set and the weight files  NOT RECOMMENDED as the files will be large.
 # Better to point to the location via the mpl_config
 # works only in the local machine with hardcoded paths given as an example to set up your environment.
 # ├── data
+# ├── cln_data
 # │ ├── divided_img
 # │ ├── final_shp
 # │ ├── input_img_local
@@ -110,5 +105,5 @@ create_dir_path(os.path.join(MPL_Config.ROOT_DIR,'projected_shp/'))
 # │    └── temp
 # └── trained_weights_Dataset_251_13_24_.h5
 
-copy_path(src='/home/bizon/rajitha/MAPLE_v3/data/input_img_local/test_image_01.tif', dst=MPL_Config.INPUT_IMAGE_DIR)
-copy_path(src='/home/bizon/rajitha/MAPLE_v3/trained_weights_Dataset_251_13_24_.h5', dst=MPL_Config.ROOT_DIR)
+#copy_path(src='/home/bizon/rajitha/MAPLE_v3/data/input_img_local/test_image_01.tif', dst=MPL_Config.INPUT_IMAGE_DIR)
+#copy_path(src='/home/bizon/rajitha/MAPLE_v3/trained_weights_Dataset_251_13_24_.h5', dst=MPL_Config.ROOT_DIR)

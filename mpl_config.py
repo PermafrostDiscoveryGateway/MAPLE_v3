@@ -1,9 +1,19 @@
+"""
+MAPLE Workflow
+This is the configuration file for maple workflow
+(1) modifies required Mask R-CNN configurations
+(2) indicates the local environment to execute the workflow i.e where files are located
+
+Project: Permafrost Discovery Gateway: Mapping Application for Arctic Permafrost Land Environment(MAPLE)
+PI: Chandi Witharana
+Author: Rajitha Udwalpola
+"""
 
 from config import Config
 class MPL_Config(object):
     # ROOT_DIR where the code will look for all the input/output and generated files
     # Can change this to the location where you want to run the code
-    ROOT_DIR = r'/home/bizon/amal/code/mpl_wkflow'
+    ROOT_DIR = r'/home/bizon/amal/code/git_maple_workflow'
 
     ## Do not change this section
     # Code depends on the relative locations indicated so should not change
