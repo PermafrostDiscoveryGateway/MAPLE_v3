@@ -18,6 +18,10 @@ class MPL_Config(object):
     OUTPUT_IMAGE_DIR = ROOT_DIR + r'/data/output_img'
     WORKER_ROOT =  ROOT_DIR + r'/data'
 
+    # ADDED to include inference cleaning post-processing
+    CLEAN_DATA_DIR = ROOT_DIR + r'/data/cln_data'
+    INPUT_DATA_BOUNDARY_FILE_PATH = ROOT_DIR + r'/data/input_bound'
+
     # weight_name = r'trained_weights_Dataset_017_15_0.h5'
     #weight_name = r'trained_weights_234_001.h5'
     # weight_name = r'trained_weights_Dataset_187_12_8.h5'

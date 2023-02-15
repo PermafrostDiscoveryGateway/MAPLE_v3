@@ -66,8 +66,8 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
     all_union=all_geoms.UnionCascaded()
     nd=time.time()
     print("Wall Time for UNION cleaning data {}".format(nd-st))
-
     # </TIME>#######################################################
+
     # Open COVERAGE area filter to remove areas that are not covered by the study
     # NOT used as it is better to remove unwanted areas in the input cleaning files and reduce input dependencies
     #The cleaning data will be interected with the coverage data to reduce the processing overhead.
