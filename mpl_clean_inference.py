@@ -20,7 +20,7 @@ PI      : Chandi Witharana
 Author  : Amal Shehan Perera
 """
 import sys
-from osgeo import ogr
+from osgeo import ogr, osr
 import os
 import time
 import glob
@@ -66,6 +66,12 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
             inDataFile = drv.Open(input_data_fps[0])
             inDataLyr = inDataFile.GetLayer()
             inSpatialRef = inDataLyr.GetSpatialRef()
+            # loading projection
+            sr = osr.SpatialReference(str(inSpatialRef))
+            srid = sr.GetAuthorityCode(None)
+            print("Input Data SRID:",srid)
+
+            print("Geo Ref for input data for transformation of cleaning data obtained")
         except:
             print("Unable to get Geo Ref for input data for transfomation of cleaning data")
 
@@ -114,6 +120,9 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
                     print("unable to clone geom")
                 try: #Transfer cleaning data geo coordinates to the input file coordinate system
                     clnSpatialRef = c_lyr.GetSpatialRef()
+                    sr = osr.SpatialReference(str(clnSpatialRef))
+                    srid = sr.GetAuthorityCode(None)
+                    print("Cleaning SRID:", srid)
                     coordTrans = osr.CoordinateTransformation(clnSpatialRef,inSpatialRef)
                     c_geometry.Transform(coordTrans)
                     print("Cleaning Data Geometry geo coordinate transformed")
@@ -202,8 +211,8 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
             st=time.time()
             st_cpu = time.process_time()
             # Go through all features and remove them if it falls within the filter_geom
-            #for fid in range(s_lyr.GetFeatureCount()): # READ all features in the input file to check and remove
-            for fid in range(100):  # READ first 100 features for testing in the input file to check and remove
+            for fid in range(s_lyr.GetFeatureCount()): # READ all features in the input file to check and remove
+            #for fid in range(100):  # READ first 100 features for testing in the input file to check and remove
             #for fid in [0,1,2,3,4,5078,5079,5080,5081,5082,21865,21866,21868,21869,21870,132392,133995,18315]:
             # wat/lak   del****** not del***************** SACHI del FID 7735      SACHI del FID 0
             # input file SampleData_157_4.shp
@@ -227,12 +236,12 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
                     print("Unable to intersect",fid)
                 if keep:
                     pass
-                    if VERBOSE_granularity and (fid%VERBOSE_granularity == 0):
-                        print("NOT Deleted:",fid)
+                    # if VERBOSE_granularity and (fid%VERBOSE_granularity == 0):
+                    #     print("NOT Deleted:",fid)
                 else:
                     s_lyr.DeleteFeature(fid)
-                    if VERBOSE_granularity and (fid%VERBOSE_granularity == 0):
-                        print("Deleted:",fid)
+                    # if VERBOSE_granularity and (fid%VERBOSE_granularity == 0):
+                    #     print("Deleted:",fid)
 
             ds.ExecuteSQL('REPACK ' + s_lyr.GetName())
             ds.ExecuteSQL('RECOMPUTE EXTENT ON ' + s_lyr.GetName())
@@ -256,5 +265,6 @@ def main():
     from mpl_config import MPL_Config
     clean_inference_shapes(MPL_Config.CLEAN_DATA_DIR,MPL_Config.FINAL_SHP_DIR,"./data/input_bound/sample3n4_out_bound.shp")
     #clean_inference_shapes("./data_2/cln_data/","./data_2/final_shp/","./data_2/input_bound/sample3n4_out_bound.shp")
+    #clean_inference_shapes("/scratch1/09208/asperera/maple_run/MAPLE_11/data_2/cln_data/", "/scratch1/09208/asperera/maple_run/MAPLE_11/data_2/final_shp/", "/scratch1/09208/asperera/maple_run/MAPLE_11/data_2/input_bound/sample3n4_out_bound.shp")
 if __name__ == "__main__":
     main()
