@@ -210,13 +210,13 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
             print("input data file : fields",[field.name for field in s_lyr.schema])
             st=time.time()
             st_cpu = time.process_time()
+
             # Go through all features and remove them if it falls within the filter_geom
-            for fid in range(s_lyr.GetFeatureCount()): # READ all features in the input file to check and remove
             #for fid in range(100):  # READ first 100 features for testing in the input file to check and remove
             #for fid in [0,1,2,3,4,5078,5079,5080,5081,5082,21865,21866,21868,21869,21870,132392,133995,18315]:
-            # wat/lak   del****** not del***************** SACHI del FID 7735      SACHI del FID 0
-            # input file SampleData_157_4.shp
-            # READ 10 features for testing in the input file to check and remove
+            #            wat/lak   del****** not del***************** SACHI del FID 7735      SACHI del FID 0
+            #            in input file SampleData_157_4.shp
+            for fid in range(s_lyr.GetFeatureCount()): # READ all features in the input file to check and remove
                 s_feature=s_lyr.GetFeature(fid)
 
                 # OPTION:1 Creating a point shape Using the centroid from the input file to check
