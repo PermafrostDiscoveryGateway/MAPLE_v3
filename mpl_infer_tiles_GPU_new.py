@@ -1,4 +1,13 @@
 #!/usr/bin/python3
+"""
+MAPLE Workflow
+(3) Inference using the trained Mask RCNN
+Will load the tiled images and do the inference.
+
+Project: Permafrost Discovery Gateway: Mapping Application for Arctic Permafrost Land Environment(MAPLE)
+PI      : Chandi Witharana
+Author  : Rajitha Udwalpola
+"""
 
 import time
 import queue
@@ -50,7 +59,7 @@ class Predictor(multiprocessing.Process):
         MY_WEIGHT_FILE = MPL_Config.WEIGHT_PATH
 
         # Import Mask RCNN
-        sys.path.append(ROOT_DIR)  ### Chandi: root is getting updated
+        sys.path.append(ROOT_DIR)
 
         # Directory to save logs and trained model
         MODEL_DIR = os.path.join(ROOT_DIR, "local_dir/datasets/logs")
@@ -163,7 +172,6 @@ class Predictor(multiprocessing.Process):
 
                 dict_polygons[int(tile_no)] = [r['masks'].shape[2]]
 
-
                 if (MPL_Config.LOGGING):
                     print(f"## {count} of {total} ::: {len(r['class_ids'])}  $$$$ {r['class_ids']}")
                     sys.stdout.flush()
@@ -175,9 +183,6 @@ class Predictor(multiprocessing.Process):
         pickle.dump(dict_polygons, dbfile)
         dbfile.close()
         w_final.close()
-
-
-
 
 def inference_image(POLYGON_DIR,
                     weights_path,
@@ -212,12 +217,8 @@ def inference_image(POLYGON_DIR,
                       len_imgs,image_name)
         p_list.append(p)
 
-
-
-
     for p in p_list:
         p.start()
-
 
 
     for img in range(int(len_imgs)):
@@ -232,7 +233,6 @@ def inference_image(POLYGON_DIR,
         #print(input_queue.qsize())
     f1.close()
     f2.close()
-
 
     for i in range(num_gpus):
         input_queue.put(None)

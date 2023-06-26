@@ -1,9 +1,23 @@
+"""
+MAPLE Workflow
+This is the configuration file for maple workflow
+(1) modifies required Mask R-CNN configurations
+(2) indicates the local environment to execute the workflow i.e where files are located
+
+Project: Permafrost Discovery Gateway: Mapping Application for Arctic Permafrost Land Environment(MAPLE)
+PI      : Chandi Witharana
+Author  : Rajitha Udwalpola
+"""
 
 from config import Config
 class MPL_Config(object):
-    ROOT_DIR = r'/mnt/data/Rajitha/MAPLE/MAPLE'
+    # ROOT_DIR where the code will look for all the input/output and generated files
+    # Can change this to the location where you want to run the code
+    ROOT_DIR = r'/home/bizon/amal/code/git_maple_workflow'
 
     ## Do not change this section
+    # Code depends on the relative locations indicated so should not change
+    # Code expects some of the locations to be available when executing.
     #-----------------------------------------------------------------
     INPUT_IMAGE_DIR = ROOT_DIR + r'/data/input_img_local'
     DIVIDED_IMAGE_DIR = ROOT_DIR + r'/data/divided_img'
@@ -14,6 +28,10 @@ class MPL_Config(object):
     OUTPUT_IMAGE_DIR = ROOT_DIR + r'/data/output_img'
     WORKER_ROOT =  ROOT_DIR + r'/data'
 
+    # ADDED to include inference cleaning post-processing
+    CLEAN_DATA_DIR = ROOT_DIR + r'/data/cln_data'
+    INPUT_DATA_BOUNDARY_FILE_PATH = ROOT_DIR + r'/data/input_bound'
+
     # weight_name = r'trained_weights_Dataset_017_15_0.h5'
     #weight_name = r'trained_weights_234_001.h5'
     # weight_name = r'trained_weights_Dataset_187_12_8.h5'
@@ -21,6 +39,8 @@ class MPL_Config(object):
     #weight_name = r'mask_rcnn_trained_weights_dataset_0.001000_194_19_18__0023.h5'
     #weight_name = r'trained_weights_Dataset_215_12_38_.h5'
     #weight_name = r'trained_weights_Dataset_239_9_13_.h5'
+    #-------------------------------------------------------------------
+    # Name of the weight file used for the inference
     weight_name = r'trained_weights_Dataset_251_13_24_.h5'
 
 
@@ -29,6 +49,8 @@ class MPL_Config(object):
     #WEIGHT_PATH = ROOT_DIR + weight_name
     #WEIGHT_PATH = ROOT_DIR + weight_name
     #WEIGHT_PATH = ROOT_DIR + weight_name
+    #-----------------------------------------------------------------
+    # Location of the weight file used for the inference
     WEIGHT_PATH = ROOT_DIR + r"/" + weight_name
     #-----------------------------------------------------------------
     CROP_SIZE = 200

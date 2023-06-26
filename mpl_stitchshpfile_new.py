@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
-
-""" Run this script on local machine rather than AWS ec2
 """
+MAPLE Workflow
+(4) Stich back to the original image dims from the tiles created by the inference process
+Project: Permafrost Discovery Gateway: Mapping Application for Arctic Permafrost Land Environment(MAPLE)
+PI      : Chandi Witharana
+Author  : Rajitha Udwalpola
+"""
+
 import shapefile
 import os.path, os
 from shapely.geometry import Polygon
@@ -41,7 +46,16 @@ def stitch_shapefile(input_root,output_root,output_file,image_name):
 
     polygon_dict = defaultdict(dict)
 
-    file_path = "data/neighbors/%s_polydict_*.pkl"%image_name
+    ### UPDATED CODE - amal 01/05/2023
+    from mpl_config import MPL_Config
+    worker_root = MPL_Config.WORKER_ROOT
+    # Path to the location where the multiple GPUs wrote the inferences from the ML
+    file_path = os.path.join(worker_root, "neighbors/%s_polydict_*.pkl" % (image_name))
+    # ORIGINAL CODE
+    # file_path = "data/neighbors/%s_polydict_*.pkl"%image_name
+    # COMMENT trying to read from current directory fixed by getting the proper worker_root.
+    # so it maps to the place where it is written by the tile_inference code  mpl_infer_tiles_GPU_new.py
+
     files = sorted(glob.glob(file_path))
     file_names = []
     poly_count = 0
@@ -54,10 +68,8 @@ def stitch_shapefile(input_root,output_root,output_file,image_name):
             poly_count += v[0]
 
     #print(polygon_dict)
-
-
-
-    from mpl_config import MPL_Config
+    # Commented this out as it is imported earlier from due to a fix -amal
+    # from mpl_config import MPL_Config
     worker_root = MPL_Config.WORKER_ROOT
     dict_ij_path = os.path.join(worker_root, "neighbors/%s_ij_dict.pkl" % image_name)
     dbfile = open(dict_ij_path, 'rb')
