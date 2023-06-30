@@ -16,8 +16,8 @@ provide path to the root directory that holds all the shapefiles.
 The 4 landscape features,files,references used for cleaning
 1. Infrastructure: SACHI.shp: Sentinel-1/2 derived Arctic Coastal Human Impact dataset (SACHI) (zenodo.org)
 2. Glaciers : glims_polygons.shp: GLIMS Glacier Database https://www.glims.org/download/ doi:10.1016/j.gloplacha.2006.07.018
-3. Lakes: Lakes lakes.shp : National Snow and Ice Data Center: http://nsidc.org/data/ggd318.html
-4. Water : arctic_water.shp : Ingmar Nitze @ Alfred-Wegener-Institut : https://www.awi.de/en/ 
+3. Water: arctic_water.shp : National Snow and Ice Data Center: http://nsidc.org/data/
+4. Lakes : Lakes lakes.shp : Ingmar Nitze @ Alfred-Wegener-Institut : https://www.awi.de/en/ 
 
 Project: Permafrost Discovery Gateway: Mapping Application for Arctic Permafrost Land Environment(MAPLE)
 PI      : Chandi Witharana
