@@ -1,4 +1,7 @@
-This is a list of locations and background information to about the cleaning data used for postprocessing.
+This is a list of locations and background information about the cleaning data used for postprocessing.
+This is given as source to help locate the files used for cleaning. Since files used are very large not uploaded to git.
+This information is also avaialble on the scripts/code that use these files.
+
 The 4 landscape features,files,references used for cleaning, URL
 1. Infrastructure: SACHI.shp: 
 Sentinel-1/2 derived Arctic Coastal Human Impact dataset (SACHI) (zenodo.org):
