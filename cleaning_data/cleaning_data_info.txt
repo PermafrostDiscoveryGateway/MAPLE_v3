@@ -1,0 +1,12 @@
+This is a list of locations and background information to about the cleaning data used for postprocessing.
+The 4 landscape features,files,references used for cleaning, URL
+1. Infrastructure: SACHI.shp: 
+Sentinel-1/2 derived Arctic Coastal Human Impact dataset (SACHI) (zenodo.org):
+https://zenodo.org/record/4925911
+2. Glaciers : glims_polygons.shp:
+GLIMS Glacier Database https://www.glims.org/download/ doi:10.1016/j.gloplacha.2006.07.
+https://www.glims.org/maps/download
+3. Water: arctic_water.shp : 
+National Snow and Ice Data Center: http://nsidc.org/data/
+4. Lakes : Lakes lakes.shp : 
+Ingmar Nitze @ Alfred-Wegener-Institut : https://www.awi.de/en/ 
