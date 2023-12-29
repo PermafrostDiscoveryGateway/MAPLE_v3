@@ -170,13 +170,16 @@ def cal_water_mask(input_img_name):
     blur = skimage.color.rgb2gray(bilat_img)
     blur = skimage.filters.gaussian(blur, sigma=2.0)
 
-    t = skimage.filters.threshold_otsu(blur)
- #   print(t)
-
+    # find the threshold to filter if all values are same otsu cannot find value
+    # hence t is made to 0.0
+    try:
+        t = skimage.filters.threshold_otsu(blur)
+    except: 
+        t=0.0
+    
     # perform inverse binary thresholding
     mask = blur > t
- #   print(mask.dtype)
-
+ 
     # output np array as GeoTiff
 
     dst_ds = gdal.GetDriverByName('GTiff').Create(output_watermask, x, y, 1, gdal.GDT_Byte, ['NBITS=1'])
