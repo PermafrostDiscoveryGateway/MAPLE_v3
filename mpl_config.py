@@ -23,6 +23,7 @@ class MPL_Config(object):
     DIVIDED_IMAGE_DIR = ROOT_DIR + r'/data/divided_img'
     OUTPUT_SHP_DIR = ROOT_DIR + r'/data/output_shp'
     FINAL_SHP_DIR = ROOT_DIR + r'/data/final_shp'
+    PROJECTED_SHP_DIR = ROOT_DIR + r'/data/projected_shp'
     WATER_MASK_DIR = ROOT_DIR + r'/data/water_mask'
     TEMP_W_IMG_DIR = ROOT_DIR + r'/data/water_mask/temp'
     OUTPUT_IMAGE_DIR = ROOT_DIR + r'/data/output_img'
@@ -41,8 +42,8 @@ class MPL_Config(object):
     #weight_name = r'trained_weights_Dataset_239_9_13_.h5'
     #-------------------------------------------------------------------
     # Name of the weight file used for the inference
-    weight_name = r'trained_weights_Dataset_251_13_24_.h5'
-
+    # weight_name = r'trained_weights_Dataset_251_13_24_.h5'
+    weight_name = r'hyp_best_train_weights_final.h5'
 
     #WEIGHT_PATH = ROOT_DIR + weight_name
     #WEIGHT_PATH = ROOT_DIR + weight_name
