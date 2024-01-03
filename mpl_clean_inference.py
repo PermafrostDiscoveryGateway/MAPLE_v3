@@ -43,7 +43,7 @@ def listdirpaths(folder):
 VERBOSE_granularity=0 # output print frequency for deleting loops 0 will have no outputs 1=all 10=every 10
 #########################################################################################
 def clean_inference_shapes(clean_data_dir="./data/cln_data",
-                           input_data_dir="./data/final_shp",
+                           input_data_dir="./data/projected_shp",
                            input_data_boundary_file_path="./data/input_bound/sample2_out_boundry.shp",
                            ):
     """Clean Known false positives (mis-classified) Polygons, based on known ground truth (rivers,lakes,buildings,etc
