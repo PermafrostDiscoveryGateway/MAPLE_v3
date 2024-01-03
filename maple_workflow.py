@@ -309,7 +309,7 @@ stich_shapefile(image_name)
 process.process_shapefile(image_name)
 print("5. start cleaning")
 inf_clean.clean_inference_shapes(MPL_Config.CLEAN_DATA_DIR,
-                       MPL_Config.FINAL_SHP_DIR,
+                        MPL_Config.PROJECTED_SHP_DIR,
                        "./data/input_bound/sample2_out_boundry.shp")
 
 # Once you are done you can check the output on ArcGIS (win) or else you can check in QGIS (nx) Add the image and the
