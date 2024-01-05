@@ -23,9 +23,9 @@ from rasterio.plot import show
 
 def get_coordinate_system_info_rio(filepath):
 #raster_path = "/home/jcohen/lake_change_time_series/geotiff/WGS1984Quad/11/3479/187.tif"
-with rasterio.open(filepath) as data:
-    crs = data.crs
-    print(crs)
+    with rasterio.open(filepath) as data:
+        crs = data.crs
+        print(crs)
 
 
 def get_coordinate_system_info(filepath):
