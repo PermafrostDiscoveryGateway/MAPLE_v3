@@ -17,6 +17,17 @@ from shapely.geometry import Polygon, Point
 from mpl_config import MPL_Config
 from osgeo import gdal, osr
 
+
+import rasterio
+from rasterio.plot import show
+
+def get_coordinate_system_info_rio(filepath):
+#raster_path = "/home/jcohen/lake_change_time_series/geotiff/WGS1984Quad/11/3479/187.tif"
+with rasterio.open(filepath) as data:
+    crs = data.crs
+    print(crs)
+
+
 def get_coordinate_system_info(filepath):
     try:
         # Open the dataset
@@ -56,6 +67,9 @@ def write_prj_file(geotiff_path, prj_file_path):
     try:
         # Get the coordinate system information
         wkt = get_coordinate_system_info(geotiff_path)
+
+        get_coordinate_system_info_rio(geotiff_path)
+
         print(wkt)
         if wkt is not None:
             # Write the WKT to a .prj file
@@ -230,7 +244,8 @@ def get_tif_file_names(directory_path):
 
 # Unit TEST CODE
 #
-# files_to_process = get_tif_file_names(MPL_Config.INPUT_IMAGE_DIR)
-# for image_name in files_to_process[0:3]:
-#     print("##################################### PROCESSING:", image_name, "###########################")
-#     process_shapefile(image_name)
+files_to_process = get_tif_file_names(MPL_Config.INPUT_IMAGE_DIR)
+for image_name in files_to_process[0:3]:
+     print("##################################### PROCESSING:", image_name, "###########################")
+     process_shapefile(image_name)
+     get_coordinate_system_info_rio(image_name)
