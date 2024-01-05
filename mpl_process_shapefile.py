@@ -62,9 +62,15 @@ def get_coordinate_system_info(filepath):
         print(f"Error: {e}")
         return None
 
-
-
 def write_prj_file(geotiff_path, prj_file_path):
+    """
+        Will create the prj file by getting the geo cordinate system from the input tiff file
+
+        Parameters
+        ----------
+        geotiff_path : Path to the geo tiff used for processing
+        prj_file_path : Path to the location to create the prj files
+        """
     try:
         # Get the coordinate system information
         wkt = get_coordinate_system_info(geotiff_path)
