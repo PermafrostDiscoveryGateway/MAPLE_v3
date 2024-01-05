@@ -17,24 +17,6 @@ from shapely.geometry import Polygon, Point
 from mpl_config import MPL_Config
 from osgeo import gdal, osr
 
-def get_coordinate_system_info_old(geotiff_path):
-    try:
-        # Open the GeoTIFF file
-        dataset = gdal.Open(geotiff_path)
-
-        if dataset is None:
-            raise Exception(f"Failed to open GeoTIFF file: {geotiff_path}")
-
-        # Get the spatial reference
-        spatial_ref = osr.SpatialReference()
-        spatial_ref.ImportFromWkt(dataset.GetProjection())
-
-        return spatial_ref.ExportToWkt()
-
-    except Exception as e:
-        print(f"Error: {e}")
-        return None
-
 def get_coordinate_system_info(filepath):
     try:
         # Open the dataset
