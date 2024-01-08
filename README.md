@@ -11,6 +11,8 @@ Mapping requires a workflow to train an AI ML model to learn how to do the mappi
 
 In general AI-ML-DL models are transferable via [weight file](#weight-file) that is a prerequsite for this model to do the inferencing. And it should be noted that the type of training data that was used for training will have a major effect on the accuracy. This codebase was used to produce the data product at the [Permafrost Discovery Gateway](https://arcticdata.io/catalog/portals/permafrost) Considering the volume of the data a big data pipeline was used on HPCs for the mapping. Care was taken ensure that the code base work on hetrogenious big data envirenments taking advantage of the underline computing architectures. This code can be also executed on a single local machine with or without GPUs. 
 
+The following diagram shows an overview of the maple workflow
+
 ![workflow](maple_workflow.png)
 
 # Setting up Conda Envirenment
