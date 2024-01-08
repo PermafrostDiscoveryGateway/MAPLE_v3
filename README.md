@@ -16,7 +16,7 @@ The following diagram shows an overview of the maple workflow
 ![workflow](maple_workflow.png)
 
 # Setting up Conda Envirenment
-The code is scripted using python and for execution the proper python env should be setup using conda. It is advisable to install the latest version of miniconda or varient and install the required envionment using the yml file provided. The required packages are:
+The code is scripted using python and for execution the proper python env should be setup using conda. It is advisable to install the latest version of miniconda or varient and install the required envionment using the [yml](https://github.com/PermafrostDiscoveryGateway/MAPLE_v3/blob/main/environment_maple.yml) file provided. The required packages are:
 
   - python=3.6
   - tensorflow-gpu==1.14.0
