@@ -1,4 +1,12 @@
 The following sbathc script is shared to get an idea of comand line execution of the file. This script is to execute the traning on multi gpu tacc hpc. 
+Most important line is:
+```
+python Maple_TrainTf2.py train --dataset=/dataset_00_to_06 --weights=coco --output=/newlogs --logs=/newlogs
+```
+
+Ignore the rest of the script. loading and unloading done to match the issues in the specific envirenment with 4gpus in hpc
+If you use the gien yml you should be able to get the code going. There are few places where things are hard coded as this was done as accademic research and not production code
+
 
 ```
 #!/bin/bash
