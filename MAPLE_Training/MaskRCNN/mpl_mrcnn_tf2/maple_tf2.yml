@@ -1,0 +1,4 @@
+name: mapple_tf2
+channels:
+  - defaults
+prefix: /work2/09208/asperera/frontera/miniconda/envs/mapple_tf2
