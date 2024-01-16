@@ -7,7 +7,7 @@ Mapping Application for Arctic Permafrost Land Environment (MAPLE) serves as the
 
 ![overview](maple_overview.png)
 
-Mapping requires a workflow to train an AI ML model to learn how to do the mapping and another pipeline to do the mapping (inferencing). This code base is for the inferencing that will use an already trianed model to do the mapping of a large volume of avaialble un mapped images. 
+Mapping requires a workflow to [train an AI ML model](https://github.com/PermafrostDiscoveryGateway/MAPLE_v3/tree/main/MAPLE_Training) to learn how to do the mapping and another pipeline to do the mapping (inferencing). This code base is for the inferencing that will use an already trianed model to do the mapping of a large volume of avaialble un mapped images. 
 
 In general AI-ML-DL models are transferable via [weight file](#weight-file) that is a prerequsite for this model to do the inferencing. And it should be noted that the type of training data that was used for training will have a major effect on the accuracy. This codebase was used to produce the data product at the [Permafrost Discovery Gateway](https://arcticdata.io/catalog/portals/permafrost) Considering the volume of the data a big data pipeline was used on HPCs for the mapping. Care was taken ensure that the code base work on hetrogenious big data envirenments taking advantage of the underline computing architectures. This code can be also executed on a single local machine with or without GPUs. 
 
