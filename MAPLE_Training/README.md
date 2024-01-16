@@ -1,1 +1,1 @@
-This will include all the training code including the hyper parameter tuning
+This directory includes training code/data. This code is kept here with the MAPLE inferencing pipeline as reference to the training models used in the inferencing pipeline and also as place holder to explore other possible models. MaskRCNN is used here but the version used for training is based on TF2 and the one used on the inferecning pipeline is TF1.14.  
