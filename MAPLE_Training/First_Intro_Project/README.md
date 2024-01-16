@@ -12,4 +12,4 @@ NOTE: Access limited to PDG colaborators request access.
 
 Performance w.r.t accuracy is very important and we use the mAP, mAR, and mF1. In semantic segmentation we measure the metrics based on IoU. 
 
-Once you are familiar with the data set and the task at hand you can try other ML models to experiment. 
+Once you are familiar with the data set and the task at hand you can try other ML models to experiment. One potential area is to explore transfer based SAM model. A simple [notebook on SAM](https://github.com/PermafrostDiscoveryGateway/MAPLE_v3/tree/main/MAPLE_Training/SAM) available to explore. Can explore with the [same data set shared here](https://drive.google.com/drive/folders/18AxiK5tGTaOhbzWmV0NZAA5sEwprsWB-?usp=sharing).
