@@ -54,7 +54,7 @@ The following directory structure and the files must be there to run
 │ ├── output_shp <br>
 │ └── water_mask <br>
 │    └── temp <br>
-└── trained_weights_Dataset_251_13_24_.h5 <br>
+└── hyp_best_train_weights_final.h5 <br>
 
 Root directory where this structure is located should also be given in the maple_configuration file. 
 
@@ -65,7 +65,7 @@ For HPC execution depending on your HPC you also need to indicate the .out .err 
 Data can be in geo tagged tiff files. Have the option of running it by pointing it to a input data directory that contains the files that you want executed or you can give a list of files to be executed. There is also an option to use a collection of overlap shapefiles related a to a batch of input files that inidicates the overlaps so that the processing of overalped input images can be avoided.
 
 As part of the data preperation
-For the basic vanila configuration you only need a list of input tiff files in a directory and for this shared code it is for one image file
+For the basic vanila configuration you only need a list of input tiff files in a directory and for this shared code it is for one image file. [Two sample images](https://drive.google.com/drive/folders/1wr4jz6ZMa4mUYYlYfzCNv67V37OoPoZt?usp=sharing)
 
 <h2 id="weight-file"> Weight File </h2>
 
