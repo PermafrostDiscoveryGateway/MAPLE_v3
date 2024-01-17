@@ -13,7 +13,7 @@ from config import Config
 class MPL_Config(object):
     # ROOT_DIR where the code will look for all the input/output and generated files
     # Can change this to the location where you want to run the code
-    ROOT_DIR = r'/home/bizon/amal/code/git_maple_workflow'
+    ROOT_DIR = r'/usr/local/google/home/djfernandez/Desktop/MAPLE_v3'
 
     ## Do not change this section
     # Code depends on the relative locations indicated so should not change
@@ -33,23 +33,10 @@ class MPL_Config(object):
     CLEAN_DATA_DIR = ROOT_DIR + r'/data/cln_data'
     INPUT_DATA_BOUNDARY_FILE_PATH = ROOT_DIR + r'/data/input_bound'
 
-    # weight_name = r'trained_weights_Dataset_017_15_0.h5'
-    #weight_name = r'trained_weights_234_001.h5'
-    # weight_name = r'trained_weights_Dataset_187_12_8.h5'
-    # weight_name =  r'trained_weights_Dataset_179_9_33.h5'
-    #weight_name = r'mask_rcnn_trained_weights_dataset_0.001000_194_19_18__0023.h5'
-    #weight_name = r'trained_weights_Dataset_215_12_38_.h5'
-    #weight_name = r'trained_weights_Dataset_239_9_13_.h5'
     #-------------------------------------------------------------------
     # Name of the weight file used for the inference
-    # weight_name = r'trained_weights_Dataset_251_13_24_.h5'
     weight_name = r'hyp_best_train_weights_final.h5'
 
-    #WEIGHT_PATH = ROOT_DIR + weight_name
-    #WEIGHT_PATH = ROOT_DIR + weight_name
-    #WEIGHT_PATH = ROOT_DIR + weight_name
-    #WEIGHT_PATH = ROOT_DIR + weight_name
-    #WEIGHT_PATH = ROOT_DIR + weight_name
     #-----------------------------------------------------------------
     # Location of the weight file used for the inference
     WEIGHT_PATH = ROOT_DIR + r"/" + weight_name

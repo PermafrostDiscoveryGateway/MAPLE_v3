@@ -58,8 +58,6 @@ def write_prj_file(geotiff_path, prj_file_path):
         # Get the coordinate system information
         wkt = get_coordinate_system_info(geotiff_path)
 
-        get_coordinate_system_info_rio(geotiff_path)
-
         print(wkt)
         if wkt is not None:
             # Write the WKT to a .prj file
