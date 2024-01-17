@@ -234,8 +234,8 @@ def get_tif_file_names(directory_path):
 
 # Unit TEST CODE
 #
-files_to_process = get_tif_file_names(MPL_Config.INPUT_IMAGE_DIR)
-for image_name in files_to_process[0:3]:
-     print("##################################### PROCESSING:", image_name, "###########################")
-     process_shapefile(image_name)
-     get_coordinate_system_info_rio(image_name)
+# files_to_process = get_tif_file_names(MPL_Config.INPUT_IMAGE_DIR)
+# for image_name in files_to_process[0:3]:
+#      print("##################################### PROCESSING:", image_name, "###########################")
+#      process_shapefile(image_name)
+#      get_coordinate_system_info_rio(image_name)
