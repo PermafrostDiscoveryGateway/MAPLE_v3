@@ -134,6 +134,7 @@ dependencies:
   - zipp=3.6.0=pyhd3eb1b0_0
   - zlib=1.2.13=h5eee18b_0
   - zstd=1.5.2=ha4553b6_0
+  - opencv-python=4.2.0.32
   - pip:
     - aiosignal==1.2.0
     - attrs==22.2.0
