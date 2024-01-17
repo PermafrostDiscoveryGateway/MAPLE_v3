@@ -18,16 +18,6 @@ from mpl_config import MPL_Config
 from osgeo import gdal, osr
 
 
-import rasterio
-from rasterio.plot import show
-
-def get_coordinate_system_info_rio(filepath):
-#raster_path = "/home/jcohen/lake_change_time_series/geotiff/WGS1984Quad/11/3479/187.tif"
-    with rasterio.open(filepath) as data:
-        crs = data.crs
-        print(crs)
-
-
 def get_coordinate_system_info(filepath):
     try:
         # Open the dataset
