@@ -160,5 +160,5 @@ dependencies:
     - tensorboardx==2.6.2.2
     - urllib3==1.26.17
     - virtualenv==20.17.1
-    - opencv-python=4.2.0.32
+    - opencv-python==4.2.0.32
 prefix: /home/bizon/anaconda3/envs/maple
