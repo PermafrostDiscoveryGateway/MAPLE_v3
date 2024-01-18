@@ -69,8 +69,7 @@ class Predictor(multiprocessing.Process):
         # Useful if you're training a model on the same
         # machine, in which case use CPU and leave the
         # GPU for training.
-        # DEVICE = "/gpu:%s"%(self.gpu_id)  # /cpu:0 or /gpu:0
-        DEVICE = "/cpu:0"  # /cpu:0 or /gpu:0
+        DEVICE = "/gpu:%s"%(self.gpu_id)  # /cpu:0 or /gpu:0
         os.environ['CUDA_VISIBLE_DEVICES'] = "{}".format(self.gpu_id)
 
         # Inspect the model in training or inference modes
