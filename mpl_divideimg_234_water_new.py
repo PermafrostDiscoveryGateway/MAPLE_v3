@@ -7,13 +7,13 @@ PI      : Chandi Witharana
 Author  : Rajitha Udwalpola
 """
 
-import os
-from osgeo import osr, gdal,ogr
-import shapefile as shp
-import numpy as np
-import h5py
-from mpl_config import  MPL_Config
 import cv2
+import h5py
+import numpy as np
+import os
+
+from mpl_config import  MPL_Config
+from osgeo import gdal
 
 def divide_image(input_image_path,    # the image directory
                  target_blocksize,    # the crop size
@@ -56,23 +56,15 @@ def divide_image(input_image_path,    # the image directory
 
     ulx, x_resolution, _, uly, _, y_resolution = gt1
 
-    YSize = IMG1.RasterYSize
-    XSize = IMG1.RasterXSize
-
-    brx = ulx + x_resolution*XSize
-    bry = uly + y_resolution*YSize
-
     # ---------------------- crop image from the water mask----------------------
     # dot product of the mask and the orignal data before breaking it for processing
     # Also band 2 3 and 4 are taken because the 4 bands cannot be processed by the NN learingin algo
-    # Need to make sure that the training bands are the same as the bands used for inferencing. 
+    # Need to make sure that the training bands are the same as the bands used for inferencing.
     #
-    #img_band1 = IMG1.GetRasterBand(1)
     img_band2 = IMG1.GetRasterBand(2)
     img_band3 = IMG1.GetRasterBand(3)
     img_band4 = IMG1.GetRasterBand(4)
 
-    #img_array1 = img_band1.ReadAsArray()
     final_array_2 = img_band2.ReadAsArray()
     final_array_3 = img_band3.ReadAsArray()
     final_array_4 = img_band4.ReadAsArray()
@@ -83,13 +75,12 @@ def divide_image(input_image_path,    # the image directory
 
     # files to store the masked and divided data. Will be stored in a directory named with the orignal
     # file and sub directory <divided_img>
-    # Two object files are created one for the parameters <image_param>  and the other for the data <image_data>. 
+    # Two object files are created one for the parameters <image_param>  and the other for the data <image_data>.
     f1 = h5py.File(file1, "w")
     f2 = h5py.File(file2, "w")
 
     rows_input = IMG1.RasterYSize
     cols_input = IMG1.RasterXSize
-    bands_input = IMG1.RasterCount
 
     # create empty grid cell
     transform = IMG1.GetGeoTransform()
@@ -137,14 +128,12 @@ def divide_image(input_image_path,    # the image directory
                     cols = block_size
             else:
                 cols = xsize - j
-            #print(f" j={j} i={i} col={cols} row={rows}")
             # get block out of the whole raster
             #todo check the array values is similar as ReadAsArray()
             band_1_array = final_array_4[i:i+rows, j:j+cols]
             band_2_array = final_array_2[i:i+rows, j:j+cols]
             band_3_array = final_array_3[i:i+rows, j:j+cols]
 
-            #print(band_3_array.shape)
             # filter out black image
             if band_3_array[0,0] == 0 and band_3_array[0,-1] == 0 and  \
                band_3_array[-1,0] == 0 and band_3_array[-1,-1] == 0:
@@ -153,7 +142,6 @@ def divide_image(input_image_path,    # the image directory
             dict_ij[id_i][id_j] = tile_count
             dict_n[tile_count] = [id_i, id_j]
 
-            #print(dict_n[tile_count])
 
             # stack three bands into one array
             img = np.stack((band_1_array, band_2_array, band_3_array), axis=2)

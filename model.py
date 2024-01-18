@@ -7,24 +7,23 @@ Licensed under the MIT License (see LICENSE for details)
 Written by Waleed Abdulla
 """
 
-import os
-import random
 import datetime
-import re
-import math
-import logging
-from collections import OrderedDict
-import multiprocessing
-import numpy as np
-import tensorflow as tf
 import keras
 import keras.backend as K
-import keras.layers as KL
 import keras.engine as KE
+import keras.layers as KL
 import keras.models as KM
-
+import logging
+import math
+import multiprocessing
+import numpy as np
+import os
+import random
+import re
+import tensorflow as tf
 import utils
 
+from collections import OrderedDict
 # Requires TensorFlow 1.3+ and Keras 2.0.8+.
 from distutils.version import LooseVersion
 assert LooseVersion(tf.__version__) >= LooseVersion("1.3")
@@ -1068,7 +1067,7 @@ def rpn_bbox_loss_graph(config, target_bbox, rpn_match, rpn_bbox):
                                    config.IMAGES_PER_GPU)
 
     loss = smooth_l1_loss(target_bbox, rpn_bbox)
-    
+
     loss = K.switch(tf.size(loss) > 0, K.mean(loss), tf.constant(0.0))
     return loss
 

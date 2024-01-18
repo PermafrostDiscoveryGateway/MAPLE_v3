@@ -10,6 +10,7 @@ Author  : Rajitha Udwalpola
 """
 
 from config import Config
+
 class MPL_Config(object):
     # ROOT_DIR where the code will look for all the input/output and generated files
     # Can change this to the location where you want to run the code
@@ -45,7 +46,6 @@ class MPL_Config(object):
 
     LOGGING = True
     NUM_GPUS_PER_CORE = 1
-#
 
 
 class PolygonConfig(Config):
@@ -75,4 +75,3 @@ class PolygonConfig(Config):
     RPN_NMS_THRESHOLD = 0.8
     IMAGE_MIN_DIM = 200
     IMAGE_MAX_DIM = 256
-

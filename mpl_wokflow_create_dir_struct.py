@@ -62,8 +62,6 @@ def create_dir_path(dir_path):
         print(dir_path,':directory already exists')
         pass
 
-import unittest
-
 def unit_test():
     print(copy_path(src='../data/final_shp/test_image_01/test_image_01.dbf',dst='./final_shp/test_image_01/'))
     create_dir_path('./data4/final_shp/test_image_01/')

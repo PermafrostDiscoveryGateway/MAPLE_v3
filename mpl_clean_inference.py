@@ -19,7 +19,6 @@ Project: Permafrost Discovery Gateway: Mapping Application for Arctic Permafrost
 PI      : Chandi Witharana
 Author  : Amal Shehan Perera
 """
-import sys
 from osgeo import ogr, osr
 import os
 import time
@@ -55,8 +54,6 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
     """
     st=time.time()
     # LOAD the cleaning data files
-    #clean_data_path = clean_data_dir + "/*.shp" # look for all shp files in the cln_data dir given
-    #clean_data_fps = sorted(glob.glob(clean_data_path))
     ogr.UseExceptions()  # Enable gdal:ogr errors to be captured/shown so that we know when things fail!
                          # Note: No error handling in gdal
     try: #LOAD cleaning data
@@ -81,7 +78,6 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
         print("List of cleaning data files selected to LOAD:")
         print(*clean_data_fps,sep="\n")
         try:
-            all_geoms=ogr.Geometry(ogr.wkbMultiPolygon)
             all_geoms_union = ogr.Geometry(ogr.wkbMultiPolygon)
             for fp in clean_data_fps:
                 # Open cleaning data files:layer
@@ -114,8 +110,6 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
                 print("Cleaning Data Added:",fp,"\nFields in File",[field.name for field in c_lyr.schema])
                 try:
                     c_geometry = c_feature.geometry().Clone()
-                    #print("geometry VALID:",c_geometry.IsValid())
-                    #print("Geometry cloned")
                 except:
                     print("unable to clone geom")
                 try: #Transfer cleaning data geo coordinates to the input file coordinate system
@@ -131,7 +125,6 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
                 try:
                     all_geoms_union = all_geoms_union.Union(c_geometry).Clone()
                     print("Cleaining Geometry Unioined")
-                    #all_geoms_union = c_geometry.Clone()
                     print("All geom union geometry Area:",all_geoms_union.Area())
                 except:
                     print("Unable to union cleaning data geom")
@@ -141,21 +134,12 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
                     #print("Geometry Closed Rings")
                 except:
                     print("Unable Close Ring geom")
-                # try: In order to use cascading union which is much more efficent.
-                #      Due to geom errors in cleaning data unable to do ToDO fix geom errors in cleaning data
-                #     all_geoms.AddGeometry(c_geometry)
-                #     print("Geometry Added")
-                # except:
-                #     print("unable to add geom")
 
-        # TIME taken for testing/Optimizing code can/should be commented
+            # TIME taken for testing/Optimizing code can/should be commented
             nd=time.time()
             print("****************************************************")
             print("Wall Time for LOAD/UNION all cleaning data %5.4f min"%((nd-st)/60))
             st=time.time()
-            #all_union=all_geoms.UnionCascaded() # Better option but cannot work with geom errors
-            #nd = time.time()
-            #print("Wall Time for Cascade UNION all cleaning data {}".format(nd - st))
             all_union=all_geoms_union.Clone()
             print("****************************************************")
             # </TIME>#######################################################
@@ -164,19 +148,7 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
     except:
         print("Unable to READ/LOAD Cleaning Data main loop")
 
-    # Open COVERAGE area filter to remove areas that are not covered by the study
-    # NOT used as it is better to remove unwanted areas in the input cleaning files and reduce input dependencies
-    #The cleaning data will be interected with the coverage data to reduce the processing overhead.
-    #Coverae file is located in the cvg_data folder
-    # dcoverage = drv.Open("./data/cvg_data/sample2_out_boundry.shp",False)  # False as we are NOT editing the file
-    # coverage_lyr = dcoverage.GetLayer()
-    # coverage_feature=coverage_lyr.GetNextFeature()
-    # coverage_geometry=coverage_feature.geometry().Clone()
-    # all_union=all_union.Intersection(coverage_geometry).Clone()
-    # print("Coverage Data Loaded from {}".format("./cvg_data/CAVM_coverage.shp"))
-
     # LOAD : AND INTERSECT the boundary aka feature envelope of the input files to reduce the processing if availble
-    #drv = ogr.GetDriverByName('ESRI Shapefile')
     if (all_union.Area()==0): print("All Clean Geom union geometry Area=0 nothing will be cleaned:")
     print("input data boundry file path:",input_data_boundary_file_path)
     if (os.path.isfile(input_data_boundary_file_path)):
@@ -192,13 +164,11 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
     if (all_union.Area()==0):
         print("All Clean Geom union geometry Area=0 after boundry intersection nothing will be cleaned:")
     #LOAD all Input files given for cleaning
-    #input_data_paths = input_data_dir + "/*" # look for all directories pointed for input processing
     input_data_fps = sorted(listdirpaths(input_data_dir))
     print("input data directory",input_data_dir)
     print("List of input data directories selected to PROCESS:CLEAN:")
     print(*input_data_fps,sep="\n")
     # FOR testing if you want to take only few files
-    # input_data_fps=input_data_fps[0:1]
     if (all_union.Area()>0):
         for fp in input_data_fps:
             # LOAD : READ each input file given
@@ -211,11 +181,6 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
             st=time.time()
             st_cpu = time.process_time()
 
-            # Go through all features and remove them if it falls within the filter_geom
-            #for fid in range(100):  # READ first 100 features for testing in the input file to check and remove
-            #for fid in [0,1,2,3,4,5078,5079,5080,5081,5082,21865,21866,21868,21869,21870,132392,133995,18315]:
-            #            wat/lak   del****** not del***************** SACHI del FID 7735      SACHI del FID 0
-            #            in input file SampleData_157_4.shp
             for fid in range(s_lyr.GetFeatureCount()): # READ all features in the input file to check and remove
                 s_feature=s_lyr.GetFeature(fid)
 
@@ -264,7 +229,5 @@ def clean_inference_shapes(clean_data_dir="./data/cln_data",
 def main():
     from mpl_config import MPL_Config
     clean_inference_shapes(MPL_Config.CLEAN_DATA_DIR,MPL_Config.FINAL_SHP_DIR,"./data/input_bound/sample3n4_out_bound.shp")
-    #clean_inference_shapes("./data_2/cln_data/","./data_2/final_shp/","./data_2/input_bound/sample3n4_out_bound.shp")
-    #clean_inference_shapes("/scratch1/09208/asperera/maple_run/MAPLE_11/data_2/cln_data/", "/scratch1/09208/asperera/maple_run/MAPLE_11/data_2/final_shp/", "/scratch1/09208/asperera/maple_run/MAPLE_11/data_2/input_bound/sample3n4_out_bound.shp")
 if __name__ == "__main__":
     main()
