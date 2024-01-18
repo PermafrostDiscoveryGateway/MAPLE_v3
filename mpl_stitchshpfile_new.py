@@ -7,30 +7,25 @@ PI      : Chandi Witharana
 Author  : Rajitha Udwalpola
 """
 
+import numpy as np
+import os
+import random
 import shapefile
-import os.path, os
-from shapely.geometry import Polygon
+
 from osgeo import ogr
 from scipy.spatial import distance
-import numpy as np
-import random
-from collections import defaultdict
-
+from shapely.geometry import Polygon
 
 def stitch_shapefile(input_root,output_root,output_file,image_name):
     # create a output shapefile
-
     output_path_1 = os.path.join(output_root, "%s.shp" % output_file)
     print(output_path_1)
-    #output_path_prj = os.path.join(output_root, "%s_prj_3413.shp" % output_file)
     w = shapefile.Writer(output_path_1)
 
     import glob
     file_path_shp = os.path.join(input_root,"*.shp")
     files = sorted(glob.glob(file_path_shp))
-    file_names = []
     for file in files:
-        #file_names.append(file.split('/')[-1])
         print(file)
         r = shapefile.Reader(file)
         w.fields = r.fields[1:]  # skip first deletion field
@@ -57,7 +52,6 @@ def stitch_shapefile(input_root,output_root,output_file,image_name):
     # so it maps to the place where it is written by the tile_inference code  mpl_infer_tiles_GPU_new.py
 
     files = sorted(glob.glob(file_path))
-    file_names = []
     poly_count = 0
     for file in files:
         dbfile = open(file, 'rb')
@@ -67,7 +61,6 @@ def stitch_shapefile(input_root,output_root,output_file,image_name):
             polygon_dict[k] = [poly_count,poly_count+v[0]]
             poly_count += v[0]
 
-    #print(polygon_dict)
     # Commented this out as it is imported earlier from due to a fix -amal
     # from mpl_config import MPL_Config
     worker_root = MPL_Config.WORKER_ROOT
@@ -82,16 +75,13 @@ def stitch_shapefile(input_root,output_root,output_file,image_name):
     size_i, size_j = dict_n['total']
     dbfile.close()
 
-    #print(dict_n)
-
     # read the shape file with recording the index
     sf = shapefile.Reader(output_path_1)
-    plyn_shp = sf.shapes()  
+    plyn_shp = sf.shapes()
 
     # create a list to store those centroid point
     centroid_list = list()
     # create a count number for final checking
-    count = 0
     for current_plyn_id in range(len(plyn_shp)):
         current_plyn_vtices = plyn_shp[current_plyn_id].points
         # create a polygon in shapely
@@ -101,16 +91,11 @@ def stitch_shapefile(input_root,output_root,output_file,image_name):
         centroid_x, centroid_y = geom.GetPoint(0)[0],geom.GetPoint(0)[1]
         centroid_list.append([centroid_x, centroid_y])
 
-
-    # process block by block in case of running out of RAM 
-    block_size = 100
-    # set the threshold for filtering out 
-    threshold = 3
     close_list = list()
     print ("Total number of polygons: ", len(centroid_list))
     tile_blocksize = 4
 
-    
+
     for id_i in range(0, size_i, 3):
         if id_i + tile_blocksize < size_i:
             n_i = tile_blocksize
@@ -118,7 +103,6 @@ def stitch_shapefile(input_root,output_root,output_file,image_name):
             n_i = size_i - id_i
 
         for id_j in range(0, size_j, 3):
-            #print("%d, %d" % (id_i, id_j))
             if id_j + tile_blocksize < size_j:
                 n_j = tile_blocksize
             else:
@@ -127,11 +111,9 @@ def stitch_shapefile(input_root,output_root,output_file,image_name):
             # add to the neighbor list.
             centroid_neighbors = []
             poly_neighbors = []
-            close_list_local = []
 
             for ii in range(n_i):
                 for jj in range(n_j):
-                    #print("(%d %d)"%(ii+id_i,jj+id_j))
                     if (ii+id_i) in dict_ij.keys():
                         if (jj+id_j) in dict_ij[(ii+id_i)].keys():
                            n = dict_ij[ii+id_i][jj+id_j]
@@ -139,8 +121,7 @@ def stitch_shapefile(input_root,output_root,output_file,image_name):
                            poly_list = [*range(poly_range[0],poly_range[1])]
                            poly_neighbors.extend(poly_list)
                            centroid_neighbors.extend(centroid_list[poly_range[0]:poly_range[1]])
-                        #else:
-                        #    print("####")
+
             if(len(centroid_neighbors) == 0):
                 continue
             dst_array = distance.cdist(centroid_neighbors, centroid_neighbors, 'euclidean')
@@ -163,9 +144,7 @@ def stitch_shapefile(input_root,output_root,output_file,image_name):
     close_list =  set(frozenset(sublist) for sublist in close_list)
     close_list = [list(x) for x in close_list]
 
-
-
-    # --------------- looking for connected components in a graph ---------------  
+    # --------------- looking for connected components in a graph ---------------
     def connected_components(lists):
         neighbors = defaultdict(set)
         seen = set()
@@ -183,21 +162,18 @@ def stitch_shapefile(input_root,output_root,output_file,image_name):
         for node in neighbors:
             if node not in seen:
                 yield sorted(component(node))
-                   
+
     close_list = list(connected_components(close_list))
 
-
-
-    # --------------- create a new shp file to store --------------- 
+    # --------------- create a new shp file to store ---------------
     # randomly pick one of many duplications
     del_index_list = list()
-    for close_possible in close_list:     
+    for close_possible in close_list:
         random_id = random.choice(close_possible)
         close_possible.remove(random_id)
         del_index_list.extend(close_possible)
 
     del_index_list = sorted(del_index_list)
-
 
     # open the target shapefile
     ds = ogr.Open(output_path_1, True)  # True allows to edit the shapefile
@@ -210,7 +186,6 @@ def stitch_shapefile(input_root,output_root,output_file,image_name):
         lyr.DeleteFeature(del_index)
         offset_value += 1
 
-
     # Repack and recompute extent
     # This is not mandatory but it organizes the FID's (so they start at 0 again and not 1)
     # and recalculates the spatial extent.
@@ -218,8 +193,3 @@ def stitch_shapefile(input_root,output_root,output_file,image_name):
     ds.ExecuteSQL('RECOMPUTE EXTENT ON ' + lyr.GetName())
 
     print("Features after: {}".format(lyr.GetFeatureCount()))
-
-    #del ds
-    #cmd = "ogr2ogr %s -a_srs 'EPSG:3413' %s"%(output_path_prj,output_path_1)
-    #os.system(cmd)
-    #print ("Finished")

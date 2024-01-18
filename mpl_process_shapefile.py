@@ -13,9 +13,10 @@ Author  : Rajitha Udwalpola / Amal Perera
 import os
 import shutil
 import shapefile
-from shapely.geometry import Polygon, Point
+
 from mpl_config import MPL_Config
 from osgeo import gdal, osr
+from shapely.geometry import Polygon, Point
 
 
 def get_coordinate_system_info(filepath):
@@ -103,7 +104,6 @@ def process_shapefile(image_name):
 
     shape_file = os.path.join(shp_dir, f"{image_file_name}.shp")
     output_shape_file = os.path.join(temp_dir, f"{image_file_name}.shp")
-    projected_shape_file = os.path.join(projected_dir, f"{image_file_name}.shp")
 
     try:
         shutil.rmtree(temp_dir)
@@ -175,36 +175,19 @@ def process_shapefile(image_name):
         width = min(edge_length)
 
         rec.extend([area, centroid.x, centroid.y, perimeter, length, width])
-        #print(rec)
         w.record(*rec)
         w.shape(shaperec.shape)
-        #print(f"{area} : {perimeter} : {length} : {width}")
-
-    #try:
     w.close()
-    #except Exception as e:
-    #print(f"Error closing shapefile {output_shape_file}: {e}")
 
     try:
         shutil.rmtree(projected_dir)
     except Exception as e:
         print(f"Error deleting directory {projected_dir}: {e}")
 
-    # try:
-    #     os.makedirs(projected_dir, exist_ok=True)
-    # except Exception as e:
-    #     print(f"Error creating directory {projected_dir}: {e}")
-
     os.chmod(temp_dir, 0o777)
-
-    #temp_dir_dbf = os.path.join(temp_dir, f"{image_file_name}.dbf")
-    #temp_dir_shx = os.path.join(temp_dir, f"{image_file_name}.shx")
 
     temp_dir_prj = os.path.join(temp_dir, f"{image_file_name}.prj")
     input_image = os.path.join(MPL_Config.INPUT_IMAGE_DIR, image_name)
-    #    data_dir = MPL_Config.WORKER_ROOT
-    #    temp_dir = os.path.join(data_dir, 'temp_shp', image_name)
-    #    output_project_file = "/home/bizon/amal/code/git_maple_workflow/data3/temp_shp/FID_329_Polygon_3/FID_329_Polygon_3.prj"
     write_prj_file(input_image, temp_dir_prj)
 
     try:
