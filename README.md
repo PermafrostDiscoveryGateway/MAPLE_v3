@@ -56,7 +56,7 @@ The following directory structure and the files must be there to run
 │    └── temp <br>
 └── hyp_best_train_weights_final.h5 <br>
 
-Root directory where this structure is located should also be given in the maple_configuration file.
+Root directory where this structure is located should also be given in the [mpl_config.py](mpl_config.py) file.
 
 For HPC execution depending on your HPC you also need to indicate the .out .err locations for it to get it executed as a batch job.
 
@@ -70,5 +70,3 @@ For the basic vanilla configuration you only need a list of input tiff files in 
 <h2 id="weight-file"> Weight File </h2>
 
 This is the [trainded weight file](https://drive.google.com/file/d/1R51e8YqTKvc_5lq7wSKEbu1G1nyV1-YZ/view?usp=drive_link) that is required for the model to do the inferencing
-
-

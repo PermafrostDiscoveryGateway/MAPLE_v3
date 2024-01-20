@@ -94,4 +94,7 @@ def create_maple_dir_structure():
   create_dir_path(MPL_Config.CLEAN_DATA_DIR)
 
 if __name__ == "__main__":
+    # We call this inside of the "if __name__" block to ensure that
+    # the directory is only created when this file is ran as the entry point
+    # and not when it is imported by other modules.
     create_maple_dir_structure()
