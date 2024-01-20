@@ -14,7 +14,8 @@ import os
 import shutil
 from mpl_config import MPL_Config
 
-def copy_path(*,src, dst, dir_mode=0o777, follow_symlinks: bool = True):
+
+def copy_path(*, src, dst, dir_mode=0o777, follow_symlinks: bool = True):
     """
     Copy a source filesystem path to a destination path, creating parent
     directories if they don't exist.
@@ -47,6 +48,7 @@ def copy_path(*,src, dst, dir_mode=0o777, follow_symlinks: bool = True):
             )
         raise
 
+
 def create_dir_path(dir_path):
     """
     Create a required directory path if it does NOT exist.
@@ -60,38 +62,46 @@ def create_dir_path(dir_path):
     try:
         os.makedirs(dir_path)
     except FileExistsError:
-        print(dir_path,':directory already exists')
+        print(dir_path, ":directory already exists")
         pass
 
+
 def unit_test():
-    print(copy_path(src='../data/final_shp/test_image_01/test_image_01.dbf',dst='./final_shp/test_image_01/'))
-    create_dir_path('./data4/final_shp/test_image_01/')
-    create_dir_path('./data4/final_shp/test_image_01/')
+    print(
+        copy_path(
+            src="../data/final_shp/test_image_01/test_image_01.dbf",
+            dst="./final_shp/test_image_01/",
+        )
+    )
+    create_dir_path("./data4/final_shp/test_image_01/")
+    create_dir_path("./data4/final_shp/test_image_01/")
+
 
 def create_maple_dir_structure():
-  # Created dir structure that is required for the maple workflow
-  # data/
-  # ├── cln_data
-  # ├── divided_img
-  # ├── final_shp
-  # ├── input_img_local
-  # ├── neighbors
-  # ├── output_img
-  # ├── output_shp
-  # ├── projected_shp
-  # └── water_mask
-  #     └── temp
+    # Created dir structure that is required for the maple workflow
+    # data/
+    # ├── cln_data
+    # ├── divided_img
+    # ├── final_shp
+    # ├── input_img_local
+    # ├── neighbors
+    # ├── output_img
+    # ├── output_shp
+    # ├── projected_shp
+    # └── water_mask
+    #     └── temp
 
-  create_dir_path(MPL_Config.INPUT_IMAGE_DIR)
-  create_dir_path(MPL_Config.DIVIDED_IMAGE_DIR)
-  create_dir_path(MPL_Config.OUTPUT_SHP_DIR)
-  create_dir_path(MPL_Config.FINAL_SHP_DIR)
-  create_dir_path(MPL_Config.WATER_MASK_DIR)
-  create_dir_path(MPL_Config.TEMP_W_IMG_DIR)
-  create_dir_path(MPL_Config.OUTPUT_IMAGE_DIR)
-  create_dir_path(os.path.join(MPL_Config.WORKER_ROOT,'neighbors/'))
-  create_dir_path(os.path.join(MPL_Config.WORKER_ROOT,'projected_shp/'))
-  create_dir_path(MPL_Config.CLEAN_DATA_DIR)
+    create_dir_path(MPL_Config.INPUT_IMAGE_DIR)
+    create_dir_path(MPL_Config.DIVIDED_IMAGE_DIR)
+    create_dir_path(MPL_Config.OUTPUT_SHP_DIR)
+    create_dir_path(MPL_Config.FINAL_SHP_DIR)
+    create_dir_path(MPL_Config.WATER_MASK_DIR)
+    create_dir_path(MPL_Config.TEMP_W_IMG_DIR)
+    create_dir_path(MPL_Config.OUTPUT_IMAGE_DIR)
+    create_dir_path(os.path.join(MPL_Config.WORKER_ROOT, "neighbors/"))
+    create_dir_path(os.path.join(MPL_Config.WORKER_ROOT, "projected_shp/"))
+    create_dir_path(MPL_Config.CLEAN_DATA_DIR)
+
 
 if __name__ == "__main__":
     # We call this inside of the "if __name__" block to ensure that
