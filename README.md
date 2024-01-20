@@ -7,9 +7,9 @@ Mapping Application for Arctic Permafrost Land Environment (MAPLE) serves as the
 
 ![overview](maple_overview.png)
 
-Mapping requires a workflow to [train an AI ML model](https://github.com/PermafrostDiscoveryGateway/MAPLE_v3/tree/main/MAPLE_Training) to learn how to do the mapping and another pipeline to do the mapping (inferencing). This code base is for the inferencing that will use an already trained model to do the mapping of a large volume of available unmapped images. 
+Mapping requires a workflow to [train an AI ML model](https://github.com/PermafrostDiscoveryGateway/MAPLE_v3/tree/main/MAPLE_Training) to learn how to do the mapping and another pipeline to do the mapping (inferencing). This code base is for the inferencing that will use an already trained model to do the mapping of a large volume of available unmapped images.
 
-In general AI-ML-DL models are transferable via [weight file](#weight-file) that is a prerequsite for this model to do the inferencing. And it should be noted that the type of training data that was used for training will have a major effect on the accuracy. This codebase was used to produce the data product at the [Permafrost Discovery Gateway](https://arcticdata.io/catalog/portals/permafrost) Considering the volume of the data a big data pipeline was used on HPCs for the mapping. Care was taken ensure that the code base work on heterogenious big data environments taking advantage of the underline computing architectures. This code can be also executed on a single local machine with or without GPUs. 
+In general AI-ML-DL models are transferable via [weight file](#weight-file) that is a prerequsite for this model to do the inferencing. And it should be noted that the type of training data that was used for training will have a major effect on the accuracy. This codebase was used to produce the data product at the [Permafrost Discovery Gateway](https://arcticdata.io/catalog/portals/permafrost) Considering the volume of the data a big data pipeline was used on HPCs for the mapping. Care was taken ensure that the code base work on heterogenious big data environments taking advantage of the underline computing architectures. This code can be also executed on a single local machine with or without GPUs.
 
 The following diagram shows an overview of the maple workflow
 
@@ -40,7 +40,7 @@ It is required to maintain the model based configurations to ensure you get an o
 
 It is recomended not to edit the main config file but to have our own config file to modify the configuration based on our requirements. You can edit the maple_config.py file with all the required parameters that include the location of the data and the locations of the output files and also the locations to store the temporary files. Since most of the HPCs do not allow us to store large files on local nodes we have to use a common location for the files.
 
-As it is wirtten you need to create a directory structure based on the config file to store the temp data. A small [pythen script](mpl_wokflow_create_dir_struct.py) is written  to generate this structure but make sure it matches the configuration. Otherwise errors will be thrown in certain cases and may not in certain cases and fail later on the pipeline.
+As it is wirtten you need to create a directory structure based on the config file to store the temp data. A small [python script](mpl_workflow_create_dir_struct.py) is written  to generate this structure but make sure it matches the configuration. Otherwise errors will be thrown in certain cases and may not in certain cases and fail later on the pipeline.
 
 The following directory structure and the files must be there to run
 
@@ -56,7 +56,7 @@ The following directory structure and the files must be there to run
 │    └── temp <br>
 └── hyp_best_train_weights_final.h5 <br>
 
-Root directory where this structure is located should also be given in the maple_configuration file. 
+Root directory where this structure is located should also be given in the [mpl_config.py](mpl_config.py) file.
 
 For HPC execution depending on your HPC you also need to indicate the .out .err locations for it to get it executed as a batch job.
 
@@ -70,5 +70,3 @@ For the basic vanilla configuration you only need a list of input tiff files in 
 <h2 id="weight-file"> Weight File </h2>
 
 This is the [trainded weight file](https://drive.google.com/file/d/1R51e8YqTKvc_5lq7wSKEbu1G1nyV1-YZ/view?usp=drive_link) that is required for the model to do the inferencing
-
-
