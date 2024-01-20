@@ -12,6 +12,7 @@ Author  : Amal Shehan Perera
 
 import os
 import shutil
+from mpl_config import MPL_Config
 
 def copy_path(*,src, dst, dir_mode=0o777, follow_symlinks: bool = True):
     """
@@ -67,46 +68,30 @@ def unit_test():
     create_dir_path('./data4/final_shp/test_image_01/')
     create_dir_path('./data4/final_shp/test_image_01/')
 
-from mpl_config import MPL_Config
-# Created dir structure that is required for the maple workflow
-# data/
-# ├── cln_data
-# ├── divided_img
-# ├── final_shp
-# ├── input_img_local
-# ├── neighbors
-# ├── output_img
-# ├── output_shp
-# ├── projected_shp
-# └── water_mask
-#     └── temp
+def create_maple_dir_structure():
+  # Created dir structure that is required for the maple workflow
+  # data/
+  # ├── cln_data
+  # ├── divided_img
+  # ├── final_shp
+  # ├── input_img_local
+  # ├── neighbors
+  # ├── output_img
+  # ├── output_shp
+  # ├── projected_shp
+  # └── water_mask
+  #     └── temp
 
-create_dir_path(MPL_Config.INPUT_IMAGE_DIR)
-create_dir_path(MPL_Config.DIVIDED_IMAGE_DIR)
-create_dir_path(MPL_Config.OUTPUT_SHP_DIR)
-create_dir_path(MPL_Config.FINAL_SHP_DIR)
-create_dir_path(MPL_Config.WATER_MASK_DIR)
-create_dir_path(MPL_Config.TEMP_W_IMG_DIR)
-create_dir_path(MPL_Config.OUTPUT_IMAGE_DIR)
-create_dir_path(os.path.join(MPL_Config.WORKER_ROOT,'neighbors/'))
-create_dir_path(os.path.join(MPL_Config.WORKER_ROOT,'projected_shp/'))
+  create_dir_path(MPL_Config.INPUT_IMAGE_DIR)
+  create_dir_path(MPL_Config.DIVIDED_IMAGE_DIR)
+  create_dir_path(MPL_Config.OUTPUT_SHP_DIR)
+  create_dir_path(MPL_Config.FINAL_SHP_DIR)
+  create_dir_path(MPL_Config.WATER_MASK_DIR)
+  create_dir_path(MPL_Config.TEMP_W_IMG_DIR)
+  create_dir_path(MPL_Config.OUTPUT_IMAGE_DIR)
+  create_dir_path(os.path.join(MPL_Config.WORKER_ROOT,'neighbors/'))
+  create_dir_path(os.path.join(MPL_Config.WORKER_ROOT,'projected_shp/'))
+  create_dir_path(MPL_Config.CLEAN_DATA_DIR)
 
-create_dir_path(MPL_Config.CLEAN_DATA_DIR)
-
-# Copy required files data set and the weight files  NOT RECOMMENDED as the files will be large.
-# Better to point to the location via the mpl_config
-# works only in the local machine with hardcoded paths given as an example to set up your environment.
-# ├── data
-# ├── cln_data
-# │ ├── divided_img
-# │ ├── final_shp
-# │ ├── input_img_local
-# │ │    └── test_image_01.tif
-# │ ├── output_img
-# │ ├── output_shp
-# │ └── water_mask
-# │    └── temp
-# └── trained_weights_Dataset_251_13_24_.h5
-
-#copy_path(src='/home/bizon/rajitha/MAPLE_v3/data/input_img_local/test_image_01.tif', dst=MPL_Config.INPUT_IMAGE_DIR)
-#copy_path(src='/home/bizon/rajitha/MAPLE_v3/trained_weights_Dataset_251_13_24_.h5', dst=MPL_Config.ROOT_DIR)
+if __name__ == "__main__":
+    create_maple_dir_structure()
