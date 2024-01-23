@@ -46,15 +46,16 @@ def get_coordinate_system_info(filepath):
         print(f"Error: {e}")
         return None
 
+
 def write_prj_file(geotiff_path, prj_file_path):
     """
-        Will create the prj file by getting the geo cordinate system from the input tiff file
+    Will create the prj file by getting the geo cordinate system from the input tiff file
 
-        Parameters
-        ----------
-        geotiff_path : Path to the geo tiff used for processing
-        prj_file_path : Path to the location to create the prj files
-        """
+    Parameters
+    ----------
+    geotiff_path : Path to the geo tiff used for processing
+    prj_file_path : Path to the location to create the prj files
+    """
     try:
         # Get the coordinate system information
         wkt = get_coordinate_system_info(geotiff_path)
@@ -62,7 +63,7 @@ def write_prj_file(geotiff_path, prj_file_path):
         print(wkt)
         if wkt is not None:
             # Write the WKT to a .prj file
-            with open(prj_file_path, 'w') as prj_file:
+            with open(prj_file_path, "w") as prj_file:
                 prj_file.write(wkt)
 
             print(f"Coordinate system information written to {prj_file_path}")
@@ -71,6 +72,7 @@ def write_prj_file(geotiff_path, prj_file_path):
 
     except Exception as e:
         print(f"Error: {e}")
+
 
 def copy_to_project_dir(source_path, new_name):
     try:
@@ -88,19 +90,22 @@ def copy_to_project_dir(source_path, new_name):
         # Copy the source directory to the same location and rename it
         shutil.copytree(source_path, new_directory_path)
 
-        print(f"Directory copied to '{new_directory_path}' and renamed to '{new_name}'.")
+        print(
+            f"Directory copied to '{new_directory_path}' and renamed to '{new_name}'."
+        )
 
     except Exception as e:
         print(f"Error: {e}")
 
-def process_shapefile(image_name):
-    data_dir = MPL_Config.WORKER_ROOT
-    image_file_name = (image_name).split('.tif')[0]
 
-    shp_dir = os.path.join(data_dir, 'final_shp', image_file_name)
-    #projected_dir = os.path.join(data_dir, 'projected_shp', image_file_name)
-    projected_dir=os.path.join(MPL_Config.PROJECTED_SHP_DIR,image_file_name)
-    temp_dir = os.path.join(data_dir, 'temp_shp', image_file_name)
+def process_shapefile(config: MPL_Config, image_name: str):
+    data_dir = config.WORKER_ROOT
+    image_file_name = (image_name).split(".tif")[0]
+
+    shp_dir = os.path.join(data_dir, "final_shp", image_file_name)
+    # projected_dir = os.path.join(data_dir, 'projected_shp', image_file_name)
+    projected_dir = os.path.join(config.PROJECTED_SHP_DIR, image_file_name)
+    temp_dir = os.path.join(data_dir, "temp_shp", image_file_name)
 
     shape_file = os.path.join(shp_dir, f"{image_file_name}.shp")
     output_shape_file = os.path.join(temp_dir, f"{image_file_name}.shp")
@@ -152,12 +157,14 @@ def process_shapefile(image_name):
 
     for shaperec in r.iterShapeRecords():
         rec = shaperec.record
-        rec.extend([
-            image_file_name[0:4],
-            image_file_name[5:13],
-            image_file_name[13:19],
-            image_file_name[20:36]
-        ])
+        rec.extend(
+            [
+                image_file_name[0:4],
+                image_file_name[5:13],
+                image_file_name[13:19],
+                image_file_name[20:36],
+            ]
+        )
 
         poly_vtx = shaperec.shape.points
         poly = Polygon(poly_vtx)
@@ -187,15 +194,17 @@ def process_shapefile(image_name):
     os.chmod(temp_dir, 0o777)
 
     temp_dir_prj = os.path.join(temp_dir, f"{image_file_name}.prj")
-    input_image = os.path.join(MPL_Config.INPUT_IMAGE_DIR, image_name)
+    input_image = os.path.join(config.INPUT_IMAGE_DIR, image_name)
     write_prj_file(input_image, temp_dir_prj)
 
     try:
-        shutil.copytree(temp_dir,projected_dir)
+        shutil.copytree(temp_dir, projected_dir)
     except Exception as e:
         print(f"Error creating projected directory {projected_dir}: {e}")
 
+
 # Example usage:
+
 
 def get_tif_file_names(directory_path):
     tif_file_names = []
@@ -205,13 +214,14 @@ def get_tif_file_names(directory_path):
 
         # Add each *.tif file name to the list
         for file in files:
-            if file.endswith('.tif'):
+            if file.endswith(".tif"):
                 tif_file_names.append(file)
 
     except Exception as e:
         print(f"Error: {e}")
 
     return tif_file_names
+
 
 # Unit TEST CODE
 #
