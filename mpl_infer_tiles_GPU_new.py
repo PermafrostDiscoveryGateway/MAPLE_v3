@@ -105,6 +105,7 @@ class Predictor(multiprocessing.Process):
         # --------------------------- Workers ---------------------------
 
         dict_polygons = defaultdict(dict)
+        # keep pulling jobs from the input queue until it's empty.
         while not self.input_queue.empty():
             job_data = self.input_queue.get()
             count += 1
@@ -160,7 +161,8 @@ class Predictor(multiprocessing.Process):
 
         worker_root = self.config.WORKER_ROOT
         db_file_path = os.path.join(
-            worker_root, "neighbors/%s_polydict_%d.pkl" % (self.image_name, self.process_counter)
+            worker_root,
+            "neighbors/%s_polydict_%d.pkl" % (self.image_name, self.process_counter),
         )
         dbfile = open(db_file_path, "wb")
         pickle.dump(dict_polygons, dbfile)
