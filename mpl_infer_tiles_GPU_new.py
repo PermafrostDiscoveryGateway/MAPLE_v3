@@ -29,10 +29,8 @@ class Predictor(multiprocessing.Process):
         self,
         config: MPL_Config,
         input_queue: multiprocessing.JoinableQueue,
-        use_gpu: bool,
         process_counter: int,
         POLYGON_DIR,
-        weights_path: str,
         output_shp_root: str,
         x_resolution: int,
         y_resolution: int,
@@ -42,13 +40,15 @@ class Predictor(multiprocessing.Process):
         multiprocessing.Process.__init__(self)
         self.config = config
         self.input_queue = input_queue
+        # Used to identify a specific predictor when mulitple predictors are
+        # created to run inference in parallel. The counter is also used to
+        # know which GPU to use when multiple are available.
         self.process_counter = process_counter
-        self.use_gpu = use_gpu
+        self.use_gpu = config.NUM_GPUS_PER_CORE > 0
         self.device = "/gpu:%d" % self.process_counter if self.use_gpu else "/cpu:0"
         self.len_imgs = len_imgs
 
         self.POLYGON_DIR = POLYGON_DIR
-        self.weights_path = weights_path
         self.output_shp_root = output_shp_root
 
         self.x_resolution = x_resolution
@@ -175,7 +175,6 @@ class Predictor(multiprocessing.Process):
 def inference_image(
     config: MPL_Config,
     POLYGON_DIR: str,
-    weights_path: str,
     output_shp_root: str,
     file1: str,
     file2: str,
@@ -195,18 +194,28 @@ def inference_image(
 
     input_queue = multiprocessing.JoinableQueue()
 
-    p_list = []
-
-    # If the number of GPUs pero core is 0 create a single predictor that will
-    # run on the CPU.
-    if config.NUM_GPUS_PER_CORE == 0:
+    # Initialize the list with a Predictor since there will always be at least
+    # one Predictor running inference.
+    p_list = [Predictor(
+        config,
+        input_queue,
+        0,
+        POLYGON_DIR,
+        output_shp_root,
+        x_resolution,
+        y_resolution,
+        len_imgs,
+        image_name,
+    )]
+    # If there are multiple GPUs available, create a Predictor for each one to
+    # run multiple inferences in parallel.
+    for i in range(1, num_gpus):
+        # set the i as the GPU device you want to use
         p = Predictor(
             config,
             input_queue,
-            False,
-            0,
+            i,
             POLYGON_DIR,
-            weights_path,
             output_shp_root,
             x_resolution,
             y_resolution,
@@ -214,25 +223,6 @@ def inference_image(
             image_name,
         )
         p_list.append(p)
-    else:
-        # If there are GPUs available, create a Predictor for each one to run
-        # multiple inferences in parallel.
-        for i in range(num_gpus):
-            # set the i as the GPU device you want to use
-            p = Predictor(
-                config,
-                input_queue,
-                True,
-                i,
-                POLYGON_DIR,
-                weights_path,
-                output_shp_root,
-                x_resolution,
-                y_resolution,
-                len_imgs,
-                image_name,
-            )
-            p_list.append(p)
 
     # populate input queue with tasks for processes to consume.
     for img in range(int(len_imgs)):

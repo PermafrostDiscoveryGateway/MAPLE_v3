@@ -43,6 +43,7 @@ def tile_image(config: MPL_Config, input_img_name: str):
 
     Parameters
     ----------
+    config : Contains static configuration information regarding the workflow.
     input_img_name : Name of the input image
     """
     sys.path.append(config.ROOT_DIR)
@@ -85,6 +86,7 @@ def cal_water_mask(config: MPL_Config, input_img_name: str):
     Uses gdal to transform the image into the required format.
     Parameters
     ----------
+    config : Contains static configuration information regarding the workflow.
     input_img_name : Name of the input image
     """
     image_file_name = (input_img_name).split(".tif")[0]
@@ -187,6 +189,7 @@ def infer_image(config: MPL_Config, input_img_name: str):
 
     Parameters
     ----------
+    config : Contains static configuration information regarding the workflow.
     input_img_name : Name of the input image file
     """
     sys.path.append(config.ROOT_DIR)
@@ -213,12 +216,10 @@ def infer_image(config: MPL_Config, input_img_name: str):
         pass
 
     POLYGON_DIR = worker_root
-    weights_path = config.WEIGHT_PATH
 
     inference.inference_image(
         config,
         POLYGON_DIR,
-        weights_path,
         worker_output_shp_subroot,
         file1,
         file2,
@@ -234,6 +235,7 @@ def stich_shapefile(config: MPL_Config, input_img_name: str):
 
     Parameters
     ----------
+    config : Contains static configuration information regarding the workflow.
     input_img_name : Name of the input image file
 
     Returns
@@ -271,7 +273,7 @@ def stich_shapefile(config: MPL_Config, input_img_name: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Extract IWPs from sateliate image scenes using MAPLE."
+        description="Extract IWPs from satellite image scenes using MAPLE."
     )
 
     # Optional Arguments
