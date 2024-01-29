@@ -9,49 +9,65 @@ PI      : Chandi Witharana
 Author  : Rajitha Udwalpola
 """
 
+import os
+
 from config import Config
 
+
 class MPL_Config(object):
-    # ROOT_DIR where the code will look for all the input/output and generated files
-    # Can change this to the location where you want to run the code
-    ROOT_DIR = r'/usr/local/google/home/djfernandez/Desktop/MAPLE_v3'
+    """Initializes MPL_Config object.
 
-    ## Do not change this section
-    # Code depends on the relative locations indicated so should not change
-    # Code expects some of the locations to be available when executing.
-    #-----------------------------------------------------------------
-    INPUT_IMAGE_DIR = ROOT_DIR + r'/data/input_img_local'
-    DIVIDED_IMAGE_DIR = ROOT_DIR + r'/data/divided_img'
-    OUTPUT_SHP_DIR = ROOT_DIR + r'/data/output_shp'
-    FINAL_SHP_DIR = ROOT_DIR + r'/data/final_shp'
-    PROJECTED_SHP_DIR = ROOT_DIR + r'/data/projected_shp'
-    WATER_MASK_DIR = ROOT_DIR + r'/data/water_mask'
-    TEMP_W_IMG_DIR = ROOT_DIR + r'/data/water_mask/temp'
-    OUTPUT_IMAGE_DIR = ROOT_DIR + r'/data/output_img'
-    WORKER_ROOT =  ROOT_DIR + r'/data'
+    Arguments:
+    root_dir -- Path to where the workflow will be ran from.
+    weight_file -- Path to the Mask-RCNN model weights. Should be relative to the
+    root directory.
+    logging -- Whether to enable logging messages when running the workflow.
+    crop_size -- Used to determine tile size when splitting the image up.
+    num_spus_per_core -- Number of GPUs available per node.
+    """
 
-    # ADDED to include inference cleaning post-processing
-    CLEAN_DATA_DIR = ROOT_DIR + r'/data/cln_data'
-    INPUT_DATA_BOUNDARY_FILE_PATH = ROOT_DIR + r'/data/input_bound'
+    def __init__(
+        self,
+        root_dir="",
+        weight_file="hyp_best_train_weights_final.h5",
+        logging=True,
+        crop_size=200,
+        num_gpus_per_core=1,
+    ):
+        ## Do not change this section
+        # Code depends on the relative locations indicated so should not change
+        # Code expects some of the locations to be available when executing.
+        # -----------------------------------------------------------------
+        self.ROOT_DIR = root_dir if root_dir else os.getcwd()
+        self.INPUT_IMAGE_DIR = self.ROOT_DIR + r"/data/input_img_local"
+        self.DIVIDED_IMAGE_DIR = self.ROOT_DIR + r"/data/divided_img"
+        self.OUTPUT_SHP_DIR = self.ROOT_DIR + r"/data/output_shp"
+        self.FINAL_SHP_DIR = self.ROOT_DIR + r"/data/final_shp"
+        self.PROJECTED_SHP_DIR = self.ROOT_DIR + r"/data/projected_shp"
+        self.WATER_MASK_DIR = self.ROOT_DIR + r"/data/water_mask"
+        self.TEMP_W_IMG_DIR = self.ROOT_DIR + r"/data/water_mask/temp"
+        self.OUTPUT_IMAGE_DIR = self.ROOT_DIR + r"/data/output_img"
+        self.WORKER_ROOT = self.ROOT_DIR + r"/data"
 
-    #-------------------------------------------------------------------
-    # Name of the weight file used for the inference
-    weight_name = r'hyp_best_train_weights_final.h5'
+        # ADDED to include inference cleaning post-processing
+        self.CLEAN_DATA_DIR = self.ROOT_DIR + r"/data/cln_data"
+        self.INPUT_DATA_BOUNDARY_FILE_PATH = self.ROOT_DIR + r"/data/input_bound"
 
-    #-----------------------------------------------------------------
-    # Location of the weight file used for the inference
-    WEIGHT_PATH = ROOT_DIR + r"/" + weight_name
-    #-----------------------------------------------------------------
-    CROP_SIZE = 200
+        # -----------------------------------------------------------------
+        # Location of the weight file used for the inference
+        self.WEIGHT_PATH = self.ROOT_DIR + r"/" + weight_file
+        # -----------------------------------------------------------------
+        self.CROP_SIZE = crop_size
 
-    LOGGING = True
-    NUM_GPUS_PER_CORE = 1
+        self.LOGGING = logging
+        self.NUM_GPUS_PER_CORE = num_gpus_per_core
 
 
 class PolygonConfig(Config):
     """Configuration for training on the toy dataset.
     Derives from the base Config class and overrides some values.
     """
+
     # Give the configuration a recognizable name
     NAME = "ice_wedge_polygon"
 

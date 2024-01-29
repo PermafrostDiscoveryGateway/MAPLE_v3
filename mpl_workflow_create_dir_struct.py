@@ -77,7 +77,7 @@ def unit_test():
     create_dir_path("./data4/final_shp/test_image_01/")
 
 
-def create_maple_dir_structure():
+def create_maple_dir_structure(config: MPL_Config):
     # Created dir structure that is required for the maple workflow
     # data/
     # ├── cln_data
@@ -90,17 +90,18 @@ def create_maple_dir_structure():
     # ├── projected_shp
     # └── water_mask
     #     └── temp
+    config = MPL_Config()
 
-    create_dir_path(MPL_Config.INPUT_IMAGE_DIR)
-    create_dir_path(MPL_Config.DIVIDED_IMAGE_DIR)
-    create_dir_path(MPL_Config.OUTPUT_SHP_DIR)
-    create_dir_path(MPL_Config.FINAL_SHP_DIR)
-    create_dir_path(MPL_Config.WATER_MASK_DIR)
-    create_dir_path(MPL_Config.TEMP_W_IMG_DIR)
-    create_dir_path(MPL_Config.OUTPUT_IMAGE_DIR)
-    create_dir_path(os.path.join(MPL_Config.WORKER_ROOT, "neighbors/"))
-    create_dir_path(os.path.join(MPL_Config.WORKER_ROOT, "projected_shp/"))
-    create_dir_path(MPL_Config.CLEAN_DATA_DIR)
+    create_dir_path(config.INPUT_IMAGE_DIR)
+    create_dir_path(config.DIVIDED_IMAGE_DIR)
+    create_dir_path(config.OUTPUT_SHP_DIR)
+    create_dir_path(config.FINAL_SHP_DIR)
+    create_dir_path(config.WATER_MASK_DIR)
+    create_dir_path(config.TEMP_W_IMG_DIR)
+    create_dir_path(config.OUTPUT_IMAGE_DIR)
+    create_dir_path(os.path.join(config.WORKER_ROOT, "neighbors/"))
+    create_dir_path(os.path.join(config.WORKER_ROOT, "projected_shp/"))
+    create_dir_path(config.CLEAN_DATA_DIR)
 
 
 if __name__ == "__main__":

@@ -36,23 +36,23 @@ WORKTAG = 1
 DIETAG = 0
 
 
-def tile_image(input_img_name):
+def tile_image(config: MPL_Config, input_img_name: str):
     """
     Tile the image into multiple pre-deifined sized parts so that the processing can be done on smaller parts due to
     processing limitations
 
     Parameters
     ----------
+    config : Contains static configuration information regarding the workflow.
     input_img_name : Name of the input image
     """
-    sys.path.append(MPL_Config.ROOT_DIR)
+    sys.path.append(config.ROOT_DIR)
 
-    crop_size = MPL_Config.CROP_SIZE
+    crop_size = config.CROP_SIZE
 
     # worker roots
-    worker_img_root = MPL_Config.INPUT_IMAGE_DIR
-    worker_divided_img_root = MPL_Config.DIVIDED_IMAGE_DIR
-
+    worker_img_root = config.INPUT_IMAGE_DIR
+    worker_divided_img_root = config.DIVIDED_IMAGE_DIR
     # input image path
     input_img_path = os.path.join(worker_img_root, input_img_name)
 
@@ -75,26 +75,25 @@ def tile_image(input_img_name):
     # Call divide image <mpl_divided_img_water> to put the water mask and also to tile and store the data
     # Multiple image overlaps are NOT taken into account in called code.
     #
-    divide.divide_image(input_img_path, crop_size, file1, file2)
+    divide.divide_image(config, input_img_path, crop_size, file1, file2)
 
     print("finished tiling")
 
 
-def cal_water_mask(input_img_name):
+def cal_water_mask(config: MPL_Config, input_img_name: str):
     """
     This will calculate the water mask to avoid (inference) processing of the masked areas with water
     Uses gdal to transform the image into the required format.
     Parameters
     ----------
+    config : Contains static configuration information regarding the workflow.
     input_img_name : Name of the input image
     """
     image_file_name = (input_img_name).split(".tif")[0]
 
-    worker_water_root = (
-        MPL_Config.WATER_MASK_DIR
-    )  # os.path.join(worker_root, "water_shp")
+    worker_water_root = config.WATER_MASK_DIR  # os.path.join(worker_root, "water_shp")
     temp_water_root = (
-        MPL_Config.TEMP_W_IMG_DIR
+        config.TEMP_W_IMG_DIR
     )  # os.path.join(worker_root, "temp_8bitmask")
 
     worker_water_subroot = os.path.join(worker_water_root, image_file_name)
@@ -124,7 +123,7 @@ def cal_water_mask(input_img_name):
     )
     nir_band = 3  # set number of NIR band
 
-    input_image = os.path.join(MPL_Config.INPUT_IMAGE_DIR, input_img_name)
+    input_image = os.path.join(config.INPUT_IMAGE_DIR, input_img_name)
 
     # %% Median and Otsu
     value = 5
@@ -184,19 +183,19 @@ def cal_water_mask(input_img_name):
     dst_ds = None
 
 
-def infer_image(input_img_name):
+def infer_image(config: MPL_Config, input_img_name: str):
     """
     Inference based on the trained model reperesented by the saved weights
 
     Parameters
     ----------
+    config : Contains static configuration information regarding the workflow.
     input_img_name : Name of the input image file
     """
-    sys.path.append(MPL_Config.ROOT_DIR)
+    sys.path.append(config.ROOT_DIR)
 
     # worker roots
-    worker_root = MPL_Config.WORKER_ROOT
-    worker_divided_img_root = MPL_Config.DIVIDED_IMAGE_DIR
+    worker_divided_img_root = config.DIVIDED_IMAGE_DIR
 
     # Create subfolder for each image
     new_file_name = input_img_name.split(".tif")[0]
@@ -207,7 +206,7 @@ def infer_image(input_img_name):
     file1 = os.path.join(worker_divided_img_subroot, "image_data.h5")
     file2 = os.path.join(worker_divided_img_subroot, "image_param.h5")
 
-    worker_output_shp_root = MPL_Config.OUTPUT_SHP_DIR
+    worker_output_shp_root = config.OUTPUT_SHP_DIR
     worker_output_shp_subroot = os.path.join(worker_output_shp_root, new_file_name)
     try:
         shutil.rmtree(worker_output_shp_subroot)
@@ -215,12 +214,9 @@ def infer_image(input_img_name):
         print("directory deletion failed")
         pass
 
-    POLYGON_DIR = worker_root
-    weights_path = MPL_Config.WEIGHT_PATH
 
     inference.inference_image(
-        POLYGON_DIR,
-        weights_path,
+        config,
         worker_output_shp_subroot,
         file1,
         file2,
@@ -230,22 +226,23 @@ def infer_image(input_img_name):
     print("done")
 
 
-def stich_shapefile(input_img_name):
+def stich_shapefile(config: MPL_Config, input_img_name: str):
     """
     Put (stich) the image tiles back to the original
 
     Parameters
     ----------
+    config : Contains static configuration information regarding the workflow.
     input_img_name : Name of the input image file
 
     Returns
     -------
 
     """
-    sys.path.append(MPL_Config.ROOT_DIR)
+    sys.path.append(config.ROOT_DIR)
 
-    worker_finaloutput_root = MPL_Config.FINAL_SHP_DIR
-    worker_output_shp_root = MPL_Config.OUTPUT_SHP_DIR
+    worker_finaloutput_root = config.FINAL_SHP_DIR
+    worker_output_shp_root = config.OUTPUT_SHP_DIR
 
     # Create subfolder for each image within the worker img root
     new_file_name = input_img_name.split(".tif")[0]
@@ -261,6 +258,7 @@ def stich_shapefile(input_img_name):
     os.mkdir(worker_finaloutput_subroot)
 
     stich.stitch_shapefile(
+        config,
         worker_output_shp_subroot,
         worker_finaloutput_subroot,
         new_file_name,
@@ -272,7 +270,7 @@ def stich_shapefile(input_img_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Extract IWPs from sateliate image scenes using MAPLE."
+        description="Extract IWPs from satellite image scenes using MAPLE."
     )
 
     # Optional Arguments
@@ -284,23 +282,52 @@ if __name__ == "__main__":
         help="Image name",
     )
 
+    parser.add_argument(
+        "--root_dir",
+        required=False,
+        default="",
+        help="The directory path from where the workflow is running. If none is "
+        "provided, the current working directory will be used by the workflow.",
+    )
+
+    parser.add_argument(
+        "--weight_file",
+        required=False,
+        default="hyp_best_train_weights_final.h5",
+        help="The file path to where the model weights can be found. Should be "
+        "relative to the root directory.",
+    )
+
+    parser.add_argument(
+        "--gpus_per_core",
+        required=False,
+        default=1,
+        help="Number of GPUs available per core. Used to determine how many "
+        "inference processes to spin up. Set this to 0 if you want to run the "
+        "workflow on a CPU.",
+        type=int
+    )
+
     args = parser.parse_args()
 
     image_name = args.image
+    config = MPL_Config(
+        args.root_dir, args.weight_file, num_gpus_per_core=args.gpus_per_core
+    )
 
     print("1.start caculating wartermask")
-    cal_water_mask(image_name)
+    cal_water_mask(config, image_name)
     print("2. start tiling image")
-    tile_image(image_name)
+    tile_image(config, image_name)
     print("3. start inferencing")
-    infer_image(image_name)
+    infer_image(config, image_name)
     print("4. start stiching")
-    stich_shapefile(image_name)
-    process.process_shapefile(image_name)
+    stich_shapefile(config, image_name)
+    process.process_shapefile(config, image_name)
     print("5. start cleaning")
     inf_clean.clean_inference_shapes(
-        MPL_Config.CLEAN_DATA_DIR,
-        MPL_Config.PROJECTED_SHP_DIR,
+        config.CLEAN_DATA_DIR,
+        config.PROJECTED_SHP_DIR,
         "./data/input_bound/sample2_out_boundry.shp",
     )
 
