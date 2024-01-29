@@ -19,6 +19,24 @@ RUN echo $CONDA_PREFIX
 
 COPY environment_maple.yml .
 
+COPY maple_workflow.py .
+
+COPY mpl_clean_inference.py .
+
+COPY mpl_divideimg_234_water_new.py .
+
+COPY mpl_infer_tiles_GPU_new.py .
+
+COPY mpl_process_shapefile.py .
+
+COPY mpl_stitchshpfile_new.py .
+
+COPY mpl_config.py .
+
+COPY model.py .
+
+COPY config.py .
+
 COPY test.py .
 
 RUN ls

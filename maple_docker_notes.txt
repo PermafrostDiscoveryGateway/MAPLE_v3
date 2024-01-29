@@ -1,0 +1,10 @@
+These are notes for running MAPLE_v3 in docker. Rough draft will be added to readme later.
+
+Building the image. If you are trying to build the image on an Apple m1, m2 chip, you will
+need to use the following command:
+
+docker build --platform linux/amd64  -t maplev3:latest .
+
+This command mounts the data directory in when running the image:
+
+docker run -t -i -v /Users/helium/Desktop/MAPLE/data:/home/data maplev3:latest

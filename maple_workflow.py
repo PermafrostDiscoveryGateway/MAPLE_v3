@@ -310,6 +310,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    print('arguments provided')
+    print(args)
+
     image_name = args.image
     config = MPL_Config(
         args.root_dir, args.weight_file, num_gpus_per_core=args.gpus_per_core
