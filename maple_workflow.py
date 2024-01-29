@@ -195,7 +195,6 @@ def infer_image(config: MPL_Config, input_img_name: str):
     sys.path.append(config.ROOT_DIR)
 
     # worker roots
-    worker_root = config.WORKER_ROOT
     worker_divided_img_root = config.DIVIDED_IMAGE_DIR
 
     # Create subfolder for each image
@@ -215,11 +214,9 @@ def infer_image(config: MPL_Config, input_img_name: str):
         print("directory deletion failed")
         pass
 
-    POLYGON_DIR = worker_root
 
     inference.inference_image(
         config,
-        POLYGON_DIR,
         worker_output_shp_subroot,
         file1,
         file2,

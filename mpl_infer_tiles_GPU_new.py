@@ -30,7 +30,6 @@ class Predictor(multiprocessing.Process):
         config: MPL_Config,
         input_queue: multiprocessing.JoinableQueue,
         process_counter: int,
-        POLYGON_DIR,
         output_shp_root: str,
         x_resolution: int,
         y_resolution: int,
@@ -48,7 +47,6 @@ class Predictor(multiprocessing.Process):
         self.device = "/gpu:%d" % self.process_counter if self.use_gpu else "/cpu:0"
         self.len_imgs = len_imgs
 
-        self.POLYGON_DIR = POLYGON_DIR
         self.output_shp_root = output_shp_root
 
         self.x_resolution = x_resolution
@@ -174,7 +172,6 @@ class Predictor(multiprocessing.Process):
 
 def inference_image(
     config: MPL_Config,
-    POLYGON_DIR: str,
     output_shp_root: str,
     file1: str,
     file2: str,
@@ -200,7 +197,6 @@ def inference_image(
         config,
         input_queue,
         0,
-        POLYGON_DIR,
         output_shp_root,
         x_resolution,
         y_resolution,
@@ -215,7 +211,6 @@ def inference_image(
             config,
             input_queue,
             i,
-            POLYGON_DIR,
             output_shp_root,
             x_resolution,
             y_resolution,
