@@ -37,6 +37,8 @@ COPY mpl_stitchshpfile_new.py .
 
 COPY mpl_config.py .
 
+COPY utils.py .
+
 COPY model.py .
 
 COPY test.py .

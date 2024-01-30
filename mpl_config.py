@@ -28,7 +28,7 @@ class MPL_Config(object):
 
     def __init__(
         self,
-        root_dir="",
+        root_dir="/",
         weight_file="hyp_best_train_weights_final.h5",
         logging=True,
         crop_size=200,
@@ -39,23 +39,23 @@ class MPL_Config(object):
         # Code expects some of the locations to be available when executing.
         # -----------------------------------------------------------------
         self.ROOT_DIR = root_dir if root_dir else os.getcwd()
-        self.INPUT_IMAGE_DIR = self.ROOT_DIR + r"/data/input_img_local"
-        self.DIVIDED_IMAGE_DIR = self.ROOT_DIR + r"/data/divided_img"
-        self.OUTPUT_SHP_DIR = self.ROOT_DIR + r"/data/output_shp"
-        self.FINAL_SHP_DIR = self.ROOT_DIR + r"/data/final_shp"
-        self.PROJECTED_SHP_DIR = self.ROOT_DIR + r"/data/projected_shp"
-        self.WATER_MASK_DIR = self.ROOT_DIR + r"/data/water_mask"
-        self.TEMP_W_IMG_DIR = self.ROOT_DIR + r"/data/water_mask/temp"
-        self.OUTPUT_IMAGE_DIR = self.ROOT_DIR + r"/data/output_img"
-        self.WORKER_ROOT = self.ROOT_DIR + r"/data"
+        self.INPUT_IMAGE_DIR = self.ROOT_DIR + "data/input_img_local"
+        self.DIVIDED_IMAGE_DIR = self.ROOT_DIR + "data/divided_img"
+        self.OUTPUT_SHP_DIR = self.ROOT_DIR + "data/output_shp"
+        self.FINAL_SHP_DIR = self.ROOT_DIR + "data/final_shp"
+        self.PROJECTED_SHP_DIR = self.ROOT_DIR + "data/projected_shp"
+        self.WATER_MASK_DIR = self.ROOT_DIR + "data/water_mask"
+        self.TEMP_W_IMG_DIR = self.ROOT_DIR + "data/water_mask/temp"
+        self.OUTPUT_IMAGE_DIR = self.ROOT_DIR + "data/output_img"
+        self.WORKER_ROOT = self.ROOT_DIR + "data"
 
         # ADDED to include inference cleaning post-processing
-        self.CLEAN_DATA_DIR = self.ROOT_DIR + r"/data/cln_data"
-        self.INPUT_DATA_BOUNDARY_FILE_PATH = self.ROOT_DIR + r"/data/input_bound"
+        self.CLEAN_DATA_DIR = self.ROOT_DIR + "data/cln_data"
+        self.INPUT_DATA_BOUNDARY_FILE_PATH = self.ROOT_DIR + "data/input_bound"
 
         # -----------------------------------------------------------------
         # Location of the weight file used for the inference
-        self.WEIGHT_PATH = self.ROOT_DIR + r"/" + weight_file
+        self.WEIGHT_PATH = self.ROOT_DIR + "/" + weight_file
         # -----------------------------------------------------------------
         self.CROP_SIZE = crop_size
 
