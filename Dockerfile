@@ -23,6 +23,8 @@ COPY environment_maple.yml .
 
 COPY config.py .
 
+COPY hyp_best_train_weights_final.h5 .
+
 COPY maple_workflow.py .
 
 COPY mpl_clean_inference.py .

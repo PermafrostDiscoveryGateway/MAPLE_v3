@@ -55,7 +55,7 @@ class MPL_Config(object):
 
         # -----------------------------------------------------------------
         # Location of the weight file used for the inference
-        self.WEIGHT_PATH = self.ROOT_DIR + "/" + weight_file
+        self.WEIGHT_PATH = self.ROOT_DIR + "" + weight_file
         # -----------------------------------------------------------------
         self.CROP_SIZE = crop_size
 
