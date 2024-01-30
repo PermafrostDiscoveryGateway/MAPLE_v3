@@ -4,6 +4,8 @@ FROM ubuntu:18.04
 ENV PATH="/root/miniconda3/bin:${PATH}"
 ARG PATH="/root/miniconda3/bin:${PATH}"
 RUN apt-get update
+RUN apt-get install -y sudo
+
 
 RUN apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 
@@ -18,6 +20,8 @@ RUN conda clean -a
 RUN echo $CONDA_PREFIX
 
 COPY environment_maple.yml .
+
+COPY config.py .
 
 COPY maple_workflow.py .
 
@@ -35,8 +39,6 @@ COPY mpl_config.py .
 
 COPY model.py .
 
-COPY config.py .
-
 COPY test.py .
 
 RUN ls
@@ -48,6 +50,17 @@ RUN conda env create -f environment_maple.yml
 SHELL ["conda", "run", "-n", "maple", "/bin/bash", "-c"]
 
 RUN python -m pip install --ignore-installed pyclowder
+
+RUN sudo apt-get update
+
+RUN apt-get clean
+
+RUN apt-get install -y libsm6 libxext6 libxrender-dev
+
+
+RUN  python -m pip install opencv-python
+
+
 
 
 CMD ["conda", "run", "--no-capture-output", "-n", "maple", "python","-u", "test.py"]
