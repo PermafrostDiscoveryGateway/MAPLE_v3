@@ -67,4 +67,4 @@ RUN  python -m pip install opencv-python
 
 
 
-CMD ["conda", "run", "--no-capture-output", "-n", "maple", "python","-u", "test.py"]
+CMD ["conda", "run", "--no-capture-output", "-n", "maple", "python","-u", "maple_workflow.py"]
