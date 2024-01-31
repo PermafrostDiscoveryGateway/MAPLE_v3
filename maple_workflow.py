@@ -331,7 +331,7 @@ if __name__ == "__main__":
     inf_clean.clean_inference_shapes(
         config.CLEAN_DATA_DIR,
         config.PROJECTED_SHP_DIR,
-        "./data/input_bound/sample2_out_boundry.shp",
+        "/data/input_bound/sample2_out_boundry.shp",
     )
 
 # Once you are done you can check the output on ArcGIS (win) or else you can check in QGIS (nx) Add the image and the
