@@ -89,8 +89,8 @@ class Predictor(multiprocessing.Process):
             )
 
         # Load weights
-        print("Loading weights ", MODEL_DIR)
-        model.load_weights(MY_WEIGHT_FILE, by_name=True)
+        print("Loading weights ", MY_WEIGHT_FILE)
+        model.keras_model.load_weights(MY_WEIGHT_FILE, by_name=True)
         output_shp_name_1 = output_shp_root.split("/")[-1]
 
         temp_name = "%s_%d.shp" % (output_shp_name_1, self.process_counter)
