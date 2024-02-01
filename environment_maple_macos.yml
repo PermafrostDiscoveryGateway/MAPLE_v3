@@ -1,9 +1,9 @@
-name: maple_py39
+name: maple_py310
 channels:
   - defaults
   - apple
 dependencies:
-  - python=3.9
+  - python=3.10
   - gdal
   - pyshp
   - scikit-image
