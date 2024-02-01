@@ -1,0 +1,15 @@
+name: maple_py39
+channels:
+  - defaults
+  - apple
+dependencies:
+  - python=3.9
+  - gdal
+  - pyshp
+  - scikit-image
+  - shapely
+  - tensorflow-deps
+  - pip:
+    - opencv-python
+    - tensorflow-macos
+    - tensorflow-metal

@@ -25,12 +25,13 @@ import numpy as np
 import os
 import sys
 import shutil
-import tensorflow as tf
+from pathlib import Path
 
 from mpl_config import MPL_Config
 from osgeo import gdal
 from skimage import color, filters, io
 from skimage.morphology import disk
+import tensorflow as tf
 
 # work tag
 WORKTAG = 1
@@ -113,8 +114,8 @@ def cal_water_mask(config: MPL_Config, input_img_name: str):
         pass
 
     # check local storage for temporary storage
-    os.mkdir(worker_water_subroot)
-    os.mkdir(temp_water_subroot)
+    Path(worker_water_subroot).mkdir(parents=True, exist_ok=True)
+    Path(temp_water_subroot).mkdir(parents=True, exist_ok=True)
 
     output_watermask = os.path.join(
         worker_water_subroot, r"%s_watermask.tif" % image_file_name
