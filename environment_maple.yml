@@ -1,4 +1,4 @@
-name: maple_py39
+name: maple_py310
 channels:
   - defaults
 dependencies:
