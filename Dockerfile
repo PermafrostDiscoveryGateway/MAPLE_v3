@@ -58,7 +58,6 @@ RUN sudo apt-get update
 #
 RUN apt-get clean
 #
-RUN  python -m pip install opencv-python
 #
 #
 RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 libxrender-dev libgl1-mesa-glx -y
