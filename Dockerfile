@@ -76,6 +76,6 @@ SHELL ["conda", "run", "-n", "maple_py39", "/bin/bash", "-c"]
 #RUN python -m pip install tensorflow-metal
 
 
-
+CMD ["conda", "run", "--no-capture-output", "-n", "maple_v39", "python","-u", "maple_workflow_create_dir_struct.py"]
 
 CMD ["conda", "run", "--no-capture-output", "-n", "maple_v39", "python","-u", "maple_workflow.py"]
