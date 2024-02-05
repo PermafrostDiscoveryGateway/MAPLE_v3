@@ -25,11 +25,13 @@ import numpy as np
 import os
 import sys
 import shutil
+from pathlib import Path
 
 from mpl_config import MPL_Config
 from osgeo import gdal
 from skimage import color, filters, io
 from skimage.morphology import disk
+import tensorflow as tf
 
 # work tag
 WORKTAG = 1
@@ -112,8 +114,8 @@ def cal_water_mask(config: MPL_Config, input_img_name: str):
         pass
 
     # check local storage for temporary storage
-    os.mkdir(worker_water_subroot)
-    os.mkdir(temp_water_subroot)
+    Path(worker_water_subroot).mkdir(parents=True, exist_ok=True)
+    Path(temp_water_subroot).mkdir(parents=True, exist_ok=True)
 
     output_watermask = os.path.join(
         worker_water_subroot, r"%s_watermask.tif" % image_file_name
@@ -158,19 +160,21 @@ def cal_water_mask(config: MPL_Config, input_img_name: str):
     x = np.shape(image)[1]
     y = np.shape(image)[0]
 
-    # blur and grayscale before thresholding
-    blur = color.rgb2gray(bilat_img)
-    blur = filters.gaussian(blur, sigma=2.0)
+    # Normalize and blur before thresholding. Usually instead of normalizing
+    # a rgb to greyscale transformation is applied. In this case, we are already
+    # dealing with a single channel so we divide all the pixels in the image by
+    # 255 to get a value between [0, 1].
+    normalized_bilat_img = bilat_img / 255
+    normalized_blurred_bilat_img = filters.gaussian(normalized_bilat_img, sigma=2.0)
 
     # find the threshold to filter if all values are same otsu cannot find value
     # hence t is made to 0.0
     try:
-        t = filters.threshold_otsu(blur)
+        t = filters.threshold_otsu(normalized_blurred_bilat_img)
     except:
         t = 0.0
-
     # perform inverse binary thresholding
-    mask = blur > t
+    mask = normalized_blurred_bilat_img > t
 
     # output np array as GeoTiff
     dst_ds = gdal.GetDriverByName("GTiff").Create(
@@ -269,6 +273,7 @@ def stich_shapefile(config: MPL_Config, input_img_name: str):
 
 
 if __name__ == "__main__":
+    tf.compat.v1.disable_eager_execution()
     parser = argparse.ArgumentParser(
         description="Extract IWPs from satellite image scenes using MAPLE."
     )

@@ -1,13 +1,15 @@
 name: maple_py310
 channels:
   - defaults
+  - apple
 dependencies:
   - python=3.10
   - gdal
   - pyshp
   - scikit-image
   - shapely
-  - pip=23.3.1
+  - tensorflow-deps
   - pip:
-    - tensorflow[and-cuda]
     - opencv-python
+    - tensorflow-macos
+    - tensorflow-metal
