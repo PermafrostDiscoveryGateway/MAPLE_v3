@@ -77,7 +77,7 @@ def unit_test():
     create_dir_path("./data4/final_shp/test_image_01/")
 
 
-def create_maple_dir_structure(config: MPL_Config):
+def create_maple_dir_structure():
     # Created dir structure that is required for the maple workflow
     # data/
     # ├── cln_data
