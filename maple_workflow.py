@@ -15,7 +15,7 @@ PI      : Chandi Witharana
 Author  : Rajitha Udwalpola
 """
 
-import argparse
+import functools
 import mpl_clean_inference as inf_clean
 import mpl_divideimg_234_water_new as divide
 import mpl_infer_tiles_GPU_new as inference
@@ -25,19 +25,22 @@ import numpy as np
 import os
 import sys
 import shutil
-from pathlib import Path
+import tensorflow as tf
 
+from flytekit import task, workflow, map_task
 from mpl_config import MPL_Config
 from osgeo import gdal
-from skimage import color, filters, io
+from pathlib import Path
+from skimage import filters, io
 from skimage.morphology import disk
-import tensorflow as tf
+from typing import List
 
 # work tag
 WORKTAG = 1
 DIETAG = 0
 
 
+@task
 def tile_image(config: MPL_Config, input_img_name: str):
     """
     Tile the image into multiple pre-deifined sized parts so that the processing can be done on smaller parts due to
@@ -48,6 +51,7 @@ def tile_image(config: MPL_Config, input_img_name: str):
     config : Contains static configuration information regarding the workflow.
     input_img_name : Name of the input image
     """
+    print("2. start tiling")
     sys.path.append(config.ROOT_DIR)
 
     crop_size = config.CROP_SIZE
@@ -82,6 +86,7 @@ def tile_image(config: MPL_Config, input_img_name: str):
     print("finished tiling")
 
 
+@task
 def cal_water_mask(config: MPL_Config, input_img_name: str):
     """
     This will calculate the water mask to avoid (inference) processing of the masked areas with water
@@ -91,6 +96,7 @@ def cal_water_mask(config: MPL_Config, input_img_name: str):
     config : Contains static configuration information regarding the workflow.
     input_img_name : Name of the input image
     """
+    print("1.start caculating wartermask")
     image_file_name = (input_img_name).split(".tif")[0]
 
     worker_water_root = config.WATER_MASK_DIR  # os.path.join(worker_root, "water_shp")
@@ -187,6 +193,7 @@ def cal_water_mask(config: MPL_Config, input_img_name: str):
     dst_ds = None
 
 
+@task
 def infer_image(config: MPL_Config, input_img_name: str):
     """
     Inference based on the trained model reperesented by the saved weights
@@ -196,6 +203,7 @@ def infer_image(config: MPL_Config, input_img_name: str):
     config : Contains static configuration information regarding the workflow.
     input_img_name : Name of the input image file
     """
+    print("3. start inferencing")
     sys.path.append(config.ROOT_DIR)
 
     # worker roots
@@ -218,7 +226,6 @@ def infer_image(config: MPL_Config, input_img_name: str):
         print("directory deletion failed")
         pass
 
-
     inference.inference_image(
         config,
         worker_output_shp_subroot,
@@ -230,6 +237,7 @@ def infer_image(config: MPL_Config, input_img_name: str):
     print("done")
 
 
+@task
 def stich_shapefile(config: MPL_Config, input_img_name: str):
     """
     Put (stich) the image tiles back to the original
@@ -243,6 +251,7 @@ def stich_shapefile(config: MPL_Config, input_img_name: str):
     -------
 
     """
+    print("4. start stiching")
     sys.path.append(config.ROOT_DIR)
 
     worker_finaloutput_root = config.FINAL_SHP_DIR
@@ -268,73 +277,67 @@ def stich_shapefile(config: MPL_Config, input_img_name: str):
         new_file_name,
         new_file_name,
     )
+    process.process_shapefile(config, input_img_name)
 
-    return "done Divide"
+    print("done stitching")
 
 
-if __name__ == "__main__":
-    tf.compat.v1.disable_eager_execution()
-    parser = argparse.ArgumentParser(
-        description="Extract IWPs from satellite image scenes using MAPLE."
-    )
-
-    # Optional Arguments
-    parser.add_argument(
-        "--image",
-        required=False,
-        default="test_image_01.tif",
-        metavar="<command>",
-        help="Image name",
-    )
-
-    parser.add_argument(
-        "--root_dir",
-        required=False,
-        default="",
-        help="The directory path from where the workflow is running. If none is "
-        "provided, the current working directory will be used by the workflow.",
-    )
-
-    parser.add_argument(
-        "--weight_file",
-        required=False,
-        default="hyp_best_train_weights_final.h5",
-        help="The file path to where the model weights can be found. Should be "
-        "relative to the root directory.",
-    )
-
-    parser.add_argument(
-        "--gpus_per_core",
-        required=False,
-        default=1,
-        help="Number of GPUs available per core. Used to determine how many "
-        "inference processes to spin up. Set this to 0 if you want to run the "
-        "workflow on a CPU.",
-        type=int
-    )
-
-    args = parser.parse_args()
-
-    image_name = args.image
-    config = MPL_Config(
-        args.root_dir, args.weight_file, num_gpus_per_core=args.gpus_per_core
-    )
-
-    print("1.start caculating wartermask")
-    cal_water_mask(config, image_name)
-    print("2. start tiling image")
-    tile_image(config, image_name)
-    print("3. start inferencing")
-    infer_image(config, image_name)
-    print("4. start stiching")
-    stich_shapefile(config, image_name)
-    process.process_shapefile(config, image_name)
+@task
+def clean_inference(config: MPL_Config, data_boundray_file: str):
     print("5. start cleaning")
     inf_clean.clean_inference_shapes(
         config.CLEAN_DATA_DIR,
         config.PROJECTED_SHP_DIR,
-        "./data/input_bound/sample2_out_boundry.shp",
+        data_boundray_file,
     )
+
+
+@task
+def setup(root_dir: str, weight_file: str, gpus_per_core: int) -> MPL_Config:
+    # disable TF eager execution
+    tf.compat.v1.disable_eager_execution()
+    return MPL_Config(root_dir, weight_file, num_gpus_per_core=gpus_per_core)
+
+
+@task
+def get_image_files(config: MPL_Config) -> List[str]:
+    # TODO: we could clean up some duplicate code by removing the .tif extension
+    # here instead of in each individual task but that will take some refactoring
+    # leaving it for a later time.
+    return os.listdir(config.INPUT_IMAGE_DIR)
+
+
+# Once flyte is installed on the environment you can run the workflow with the
+# following command:
+# pyflyte run maple_workflow.py maple_workflow --gpus_per_core 0
+@workflow
+def maple_workflow(
+    root_dir: str = "",
+    weight_file: str = "hyp_best_train_weights_final.h5",
+    gpus_per_core: int = 1,
+):
+    config = setup(
+        root_dir=root_dir, weight_file=weight_file, gpus_per_core=gpus_per_core
+    )
+    image_files = get_image_files(config=config)
+    partial_t0 = functools.partial(cal_water_mask, config=config)
+    t0 = map_task(partial_t0)(input_img_name=image_files)
+    partial_t1 = functools.partial(tile_image, config=config)
+    t1 = map_task(partial_t1)(input_img_name=image_files)
+    partial_t2 = functools.partial(infer_image, config=config)
+    t2 = map_task(partial_t2)(input_img_name=image_files)
+    partial_t3 = functools.partial(stich_shapefile, config=config)
+    t3 = map_task(partial_t3)(input_img_name=image_files)
+    # clean inference is set up as a bulk operator on the whole directory. Should
+    # probably refactor it to clean the inference of individual images to follow
+    # the same patterns as the tasks above.
+    t4 = clean_inference(
+        config=config, data_boundray_file="./data/input_bound/sample2_out_boundry.shp"
+    )
+    t0 >> t1
+    t1 >> t2
+    t2 >> t3
+    t3 >> t4
 
 # Once you are done you can check the output on ArcGIS (win) or else you can check in QGIS (nx) Add the image and the
 # shp, shx, dbf as layers.
