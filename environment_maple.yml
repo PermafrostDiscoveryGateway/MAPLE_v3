@@ -11,3 +11,4 @@ dependencies:
   - pip:
     - tensorflow[and-cuda]
     - opencv-python
+    - flytekit

@@ -53,5 +53,3 @@ RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 libxrender-dev libg
 SHELL ["conda", "run", "-n", "maple_py310", "/bin/bash", "-c"]
 
 CMD ["conda", "run", "--no-capture-output", "-n", "maple_v310", "python","-u", "maple_workflow_create_dir_struct.py"]
-
-CMD ["conda", "run", "--no-capture-output", "-n", "maple_v310", "python","-u", "maple_workflow.py"]

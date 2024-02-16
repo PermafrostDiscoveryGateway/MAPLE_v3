@@ -186,7 +186,7 @@ def clean_inference_shapes(
         b_feature = dboundry_lyr.GetNextFeature()
         b_geometry = b_feature.geometry().Clone()
         all_union = all_union.Intersection(b_geometry).Clone()
-        print("Boundary Data Loaded from {}".format("sample2_out_boundry.shp"))
+        print("Boundary Data Loaded from {}".format(input_data_boundary_file_path))
     else:
         print("No Boundary/Feature Envelope Data Loaded to reduce computing")
     print("all geom union geometry Area:", all_union.Area())
