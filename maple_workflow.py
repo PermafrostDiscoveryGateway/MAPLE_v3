@@ -16,6 +16,7 @@ Author  : Rajitha Udwalpola
 """
 
 import argparse
+import cv2
 import mpl_clean_inference as inf_clean
 import mpl_divideimg_234_water_new as divide
 import mpl_infer_tiles_GPU_new as inference
@@ -28,6 +29,7 @@ import sys
 import shutil
 from pathlib import Path
 
+from dataclasses import dataclass
 from mpl_config import MPL_Config
 from osgeo import gdal
 from skimage import color, filters, io
@@ -38,6 +40,27 @@ from typing import Any, Dict
 # work tag
 WORKTAG = 1
 DIETAG = 0
+
+
+@dataclass
+class ImageMetadata:
+    dict_i_j: dict[float, dict[float, float]]
+    dict_n: dict[float, list[float, float]]
+    x_resolution: float
+    y_resolution: float
+
+
+@dataclass
+class ImageTileMetadata:
+    upper_left_row: float
+    upper_left_col: float
+    tile_num: int
+
+
+@dataclass
+class ImageTile:
+    tile_values: np.array
+    tile_metadata: ImageTileMetadata
 
 
 def create_geotiff_images_dataset(input_image_dir: str) -> ray.data.Dataset:
@@ -62,51 +85,6 @@ def test_gdal_operation(row: Dict[str, Any]) -> Dict[str, Any]:
     row["gdal_test"] = np.array_equal(input_image_gtif.GetRasterBand(
         1).ReadAsArray(), vfs_image_gtif.GetRasterBand(1).ReadAsArray())
     return row
-
-
-def tile_image(config: MPL_Config, input_img_name: str):
-    """
-    Tile the image into multiple pre-deifined sized parts so that the processing can be done on smaller parts due to
-    processing limitations
-
-    Parameters
-    ----------
-    config : Contains static configuration information regarding the workflow.
-    input_img_name : Name of the input image
-    """
-    sys.path.append(config.ROOT_DIR)
-
-    crop_size = config.CROP_SIZE
-
-    # worker roots
-    worker_img_root = config.INPUT_IMAGE_DIR
-    worker_divided_img_root = config.DIVIDED_IMAGE_DIR
-    # input image path
-    input_img_path = os.path.join(worker_img_root, input_img_name)
-
-    # Create subfolder for each image
-    new_file_name = input_img_name.split(".tif")[0]
-    worker_divided_img_subroot = os.path.join(
-        worker_divided_img_root, new_file_name)
-
-    print(worker_divided_img_subroot)
-
-    try:
-        shutil.rmtree(worker_divided_img_subroot)
-    except:
-        print("directory deletion failed")
-        pass
-    os.mkdir(worker_divided_img_subroot)
-
-    file1 = os.path.join(worker_divided_img_subroot, "image_data.h5")
-    file2 = os.path.join(worker_divided_img_subroot, "image_param.h5")
-    # ----------------------------------------------------------------------------------------------------
-    # Call divide image <mpl_divided_img_water> to put the water mask and also to tile and store the data
-    # Multiple image overlaps are NOT taken into account in called code.
-    #
-    divide.divide_image(config, input_img_path, crop_size, file1, file2)
-
-    print("finished tiling")
 
 
 def cal_water_mask(row: Dict[str, Any], config: MPL_Config) -> Dict[str, Any]:
@@ -216,6 +194,133 @@ def cal_water_mask(row: Dict[str, Any], config: MPL_Config) -> Dict[str, Any]:
     dst_ds = None
     row["mask"] = mask
     return row
+
+
+def tile_image(row: Dict[str, Any], config: MPL_Config) -> ray.data.Dataset:
+    """
+    Tile the image into multiple pre-deifined sized parts so that the processing can be done on smaller parts due to
+    processing limitations
+
+    Parameters
+    ----------
+    config : Contains static configuration information regarding the workflow.
+    input_img_name : Name of the input image
+    """
+
+    input_image_gtif = gdal.Open(row["vfs_image_path"])
+    mask = row["mask"]
+
+    # convert the original image into the geo cordinates for further processing using gdal
+    # https://gdal.org/tutorials/geotransforms_tut.html
+    # GT(0) x-coordinate of the upper-left corner of the upper-left pixel.
+    # GT(1) w-e pixel resolution / pixel width.
+    # GT(2) row rotation (typically zero).
+    # GT(3) y-coordinate of the upper-left corner of the upper-left pixel.
+    # GT(4) column rotation (typically zero).
+    # GT(5) n-s pixel resolution / pixel height (negative value for a north-up image).
+
+    # ---------------------- crop image from the water mask----------------------
+    # dot product of the mask and the orignal data before breaking it for processing
+    # Also band 2 3 and 4 are taken because the 4 bands cannot be processed by the NN learingin algo
+    # Need to make sure that the training bands are the same as the bands used for inferencing.
+    #
+    final_array_2 = input_image_gtif.GetRasterBand(2).ReadAsArray()
+    final_array_3 = input_image_gtif.GetRasterBand(3).ReadAsArray()
+    final_array_4 = input_image_gtif.GetRasterBand(4).ReadAsArray()
+
+    final_array_2 = np.multiply(final_array_2, mask)
+    final_array_3 = np.multiply(final_array_3, mask)
+    final_array_4 = np.multiply(final_array_4, mask)
+
+    # ulx, uly is the upper left corner
+    ulx, x_resolution, _, uly, _, y_resolution = input_image_gtif.GetGeoTransform()
+
+    # ---------------------- Divide image (tile) ----------------------
+    overlap_rate = 0.2
+    block_size = config.CROP_SIZE
+    ysize = input_image_gtif.RasterYSize
+    xsize = input_image_gtif.RasterXSize
+
+    # Load the data frame
+    from collections import defaultdict
+
+    dict_ij = defaultdict(dict)
+    dict_n = defaultdict(dict)
+    tile_count = 0
+
+    y_list = range(0, ysize, int(block_size * (1 - overlap_rate)))
+    x_list = range(0, xsize, int(block_size * (1 - overlap_rate)))
+    dict_n["total"] = [len(y_list), len(x_list)]
+
+    # ---------------------- Find each Upper left (x,y) for each divided images ----------------------
+    #  ***-----------------
+    #  ***
+    #  ***
+    #  |
+    #  |
+    #
+    tiles = []
+    for id_i, i in enumerate(y_list):
+        # don't want moving window to be larger than row size of input raster
+        if i + block_size < ysize:
+            rows = block_size
+        else:
+            rows = ysize - i
+
+        # read col
+        for id_j, j in enumerate(x_list):
+            if j + block_size < xsize:
+                cols = block_size
+            else:
+                cols = xsize - j
+            # get block out of the whole raster
+            # todo check the array values is similar as ReadAsArray()
+            band_1_array = final_array_4[i: i + rows, j: j + cols]
+            band_2_array = final_array_2[i: i + rows, j: j + cols]
+            band_3_array = final_array_3[i: i + rows, j: j + cols]
+
+            # filter out black image
+            if (
+                band_3_array[0, 0] == 0
+                and band_3_array[0, -1] == 0
+                and band_3_array[-1, 0] == 0
+                and band_3_array[-1, -1] == 0
+            ):
+                continue
+
+            dict_ij[id_i][id_j] = tile_count
+            dict_n[tile_count] = [id_i, id_j]
+
+            # stack three bands into one array
+            img = np.stack((band_1_array, band_2_array, band_3_array), axis=2)
+            cv2.normalize(img, img, 0, 255, cv2.NORM_MINMAX)
+            img = img.astype(np.uint8)
+            B, G, R = cv2.split(img)
+            out_B = cv2.equalizeHist(B)
+            out_R = cv2.equalizeHist(R)
+            out_G = cv2.equalizeHist(G)
+            final_image = cv2.merge((out_B, out_G, out_R))
+
+            # Upper left (x,y) for each images
+            ul_row_divided_img = uly + i * y_resolution
+            ul_col_divided_img = ulx + j * x_resolution
+
+            tile_metadata = ImageTileMetadata(
+                upper_left_row=ul_row_divided_img, upper_left_col=ul_col_divided_img, tile_num=tile_count)
+            image_tile = ImageTile(
+                tile_values=final_image, tile_metadata=tile_metadata)
+            tiles.append(image_tile)
+            tile_count += 1
+
+    # --------------- Store all the title as an object file
+    image_metadata = ImageMetadata(
+        dict_i_j=dict_ij, dict_n=dict_n, x_resolution=x_resolution, y_resolution=y_resolution)
+    row["image_metadata"] = image_metadata
+    current_row = row
+    for image_tile in tiles:
+        new_row = current_row
+        new_row["image_tile"] = image_tile
+        yield new_row
 
 
 def infer_image(config: MPL_Config, input_img_name: str):
@@ -363,7 +468,9 @@ if __name__ == "__main__":
                               fn_kwargs={"config": config})
     print("dataset with water mask: ", dataset_with_water_mask.schema())
     print("2. start tiling image")
-    tile_image(config, image_name)
+    image_tiles_dataset = dataset_with_water_mask.flat_map(
+        fn=tile_image, fn_kwargs={"config": config})
+    print("dataset with image tiles: ", image_tiles_dataset.schema())
     print("3. start inferencing")
     infer_image(config, image_name)
     print("4. start stiching")
