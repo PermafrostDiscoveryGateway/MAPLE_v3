@@ -23,6 +23,7 @@ import mpl_process_shapefile as process
 import mpl_stitchshpfile_new as stich
 import numpy as np
 import os
+import ray
 import sys
 import shutil
 from pathlib import Path
@@ -32,10 +33,35 @@ from osgeo import gdal
 from skimage import color, filters, io
 from skimage.morphology import disk
 import tensorflow as tf
+from typing import Any, Dict
 
 # work tag
 WORKTAG = 1
 DIETAG = 0
+
+
+def create_geotiff_images_dataset(input_image_dir: str) -> ray.data.Dataset:
+    return ray.data.read_binary_files(input_image_dir, include_paths=True)
+
+
+def add_virtual_GDAL_file_path(row: Dict[str, Any]) -> Dict[str, Any]:
+    vfs_dir_path = '/vsimem/vsidir/'
+    image_file_name = os.path.basename(row["path"])
+    vfs_filename = os.path.join(vfs_dir_path, image_file_name)
+    dst = gdal.VSIFOpenL(vfs_filename, 'wb+')
+    gdal.VSIFWriteL(row["bytes"], 1, len(row["bytes"]), dst)
+    gdal.VSIFCloseL(dst)
+    row["image_file_name"] = image_file_name
+    row["vfs_image_path"] = vfs_filename
+    return row
+
+
+def test_gdal_operation(row: Dict[str, Any]) -> Dict[str, Any]:
+    input_image_gtif = gdal.Open(row["path"])
+    vfs_image_gtif = gdal.Open(row["vfs_image_path"])
+    row["gdal_test"] = np.array_equal(input_image_gtif.GetRasterBand(
+        1).ReadAsArray(), vfs_image_gtif.GetRasterBand(1).ReadAsArray())
+    return row
 
 
 def tile_image(config: MPL_Config, input_img_name: str):
@@ -326,6 +352,10 @@ if __name__ == "__main__":
         args.root_dir, args.weight_file, num_gpus_per_core=args.gpus_per_core
     )
 
+    print("0. load geotiffs into ray dataset")
+    dataset = create_geotiff_images_dataset(
+        config.INPUT_IMAGE_DIR).map(add_virtual_GDAL_file_path)
+    print("ray dataset:", dataset.schema())
     print("1.start caculating wartermask")
     cal_water_mask(config, image_name)
     print("2. start tiling image")
