@@ -1,4 +1,4 @@
-name: maple_py310
+name: maple_py310_ray
 channels:
   - defaults
 dependencies:
@@ -11,3 +11,6 @@ dependencies:
   - pip:
     - tensorflow[and-cuda]
     - opencv-python
+    - ray
+    - pandas==2.1.4
+    - pyarrow
