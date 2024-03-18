@@ -60,7 +60,8 @@ def tile_image(config: MPL_Config, input_img_name: str):
 
     # Create subfolder for each image
     new_file_name = input_img_name.split(".tif")[0]
-    worker_divided_img_subroot = os.path.join(worker_divided_img_root, new_file_name)
+    worker_divided_img_subroot = os.path.join(
+        worker_divided_img_root, new_file_name)
 
     print(worker_divided_img_subroot)
 
@@ -93,7 +94,8 @@ def cal_water_mask(config: MPL_Config, input_img_name: str):
     """
     image_file_name = (input_img_name).split(".tif")[0]
 
-    worker_water_root = config.WATER_MASK_DIR  # os.path.join(worker_root, "water_shp")
+    # os.path.join(worker_root, "water_shp")
+    worker_water_root = config.WATER_MASK_DIR
     temp_water_root = (
         config.TEMP_W_IMG_DIR
     )  # os.path.join(worker_root, "temp_8bitmask")
@@ -130,7 +132,7 @@ def cal_water_mask(config: MPL_Config, input_img_name: str):
     # %% Median and Otsu
     value = 5
 
-    ### UPDATED CODE - amal 01/11/2023
+    # UPDATED CODE - amal 01/11/2023
     # cmd line execution thrown exceptions unable to capture
     # Using gdal to execute the gdal_Translate
     # output file checked against the cmd line gdal_translate
@@ -165,7 +167,8 @@ def cal_water_mask(config: MPL_Config, input_img_name: str):
     # dealing with a single channel so we divide all the pixels in the image by
     # 255 to get a value between [0, 1].
     normalized_bilat_img = bilat_img / 255
-    normalized_blurred_bilat_img = filters.gaussian(normalized_bilat_img, sigma=2.0)
+    normalized_blurred_bilat_img = filters.gaussian(
+        normalized_bilat_img, sigma=2.0)
 
     # find the threshold to filter if all values are same otsu cannot find value
     # hence t is made to 0.0
@@ -203,7 +206,8 @@ def infer_image(config: MPL_Config, input_img_name: str):
 
     # Create subfolder for each image
     new_file_name = input_img_name.split(".tif")[0]
-    worker_divided_img_subroot = os.path.join(worker_divided_img_root, new_file_name)
+    worker_divided_img_subroot = os.path.join(
+        worker_divided_img_root, new_file_name)
 
     print(worker_divided_img_subroot)
 
@@ -211,13 +215,13 @@ def infer_image(config: MPL_Config, input_img_name: str):
     file2 = os.path.join(worker_divided_img_subroot, "image_param.h5")
 
     worker_output_shp_root = config.OUTPUT_SHP_DIR
-    worker_output_shp_subroot = os.path.join(worker_output_shp_root, new_file_name)
+    worker_output_shp_subroot = os.path.join(
+        worker_output_shp_root, new_file_name)
     try:
         shutil.rmtree(worker_output_shp_subroot)
     except:
         print("directory deletion failed")
         pass
-
 
     inference.inference_image(
         config,
@@ -251,8 +255,10 @@ def stich_shapefile(config: MPL_Config, input_img_name: str):
     # Create subfolder for each image within the worker img root
     new_file_name = input_img_name.split(".tif")[0]
 
-    worker_finaloutput_subroot = os.path.join(worker_finaloutput_root, new_file_name)
-    worker_output_shp_subroot = os.path.join(worker_output_shp_root, new_file_name)
+    worker_finaloutput_subroot = os.path.join(
+        worker_finaloutput_root, new_file_name)
+    worker_output_shp_subroot = os.path.join(
+        worker_output_shp_root, new_file_name)
 
     try:
         shutil.rmtree(worker_finaloutput_subroot)
