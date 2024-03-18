@@ -109,16 +109,16 @@ def tile_image(config: MPL_Config, input_img_name: str):
     print("finished tiling")
 
 
-def cal_water_mask(config: MPL_Config, input_img_name: str):
+def cal_water_mask(row: Dict[str, Any], config: MPL_Config) -> Dict[str, Any]:
     """
     This will calculate the water mask to avoid (inference) processing of the masked areas with water
     Uses gdal to transform the image into the required format.
     Parameters
     ----------
+    row : Row in Ray Dataset, there is one row per image.
     config : Contains static configuration information regarding the workflow.
-    input_img_name : Name of the input image
     """
-    image_file_name = (input_img_name).split(".tif")[0]
+    image_name = row["image_file_name"].split(".tif")[0]
 
     # os.path.join(worker_root, "water_shp")
     worker_water_root = config.WATER_MASK_DIR
@@ -126,8 +126,8 @@ def cal_water_mask(config: MPL_Config, input_img_name: str):
         config.TEMP_W_IMG_DIR
     )  # os.path.join(worker_root, "temp_8bitmask")
 
-    worker_water_subroot = os.path.join(worker_water_root, image_file_name)
-    temp_water_subroot = os.path.join(temp_water_root, image_file_name)
+    worker_water_subroot = os.path.join(worker_water_root, image_name)
+    temp_water_subroot = os.path.join(temp_water_root, image_name)
     # Prepare to make directories to create the files
     try:
         shutil.rmtree(worker_water_subroot)
@@ -146,17 +146,17 @@ def cal_water_mask(config: MPL_Config, input_img_name: str):
     Path(temp_water_subroot).mkdir(parents=True, exist_ok=True)
 
     output_watermask = os.path.join(
-        worker_water_subroot, r"%s_watermask.tif" % image_file_name
+        worker_water_subroot, r"%s_watermask.tif" % image_name
     )
     output_tif_8b_file = os.path.join(
-        temp_water_subroot, r"%s_8bit.tif" % image_file_name
+        temp_water_subroot, r"%s_8bit.tif" % image_name
     )
     nir_band = 3  # set number of NIR band
 
-    input_image = os.path.join(config.INPUT_IMAGE_DIR, input_img_name)
-
     # %% Median and Otsu
     value = 5
+
+    input_image_file_path = row["vfs_image_path"]
 
     # UPDATED CODE - amal 01/11/2023
     # cmd line execution thrown exceptions unable to capture
@@ -166,7 +166,7 @@ def cal_water_mask(config: MPL_Config, input_img_name: str):
     try:
         gdal.Translate(
             destName=output_tif_8b_file,
-            srcDS=input_image,
+            srcDS=input_image_file_path,
             format="GTiff",
             outputType=gdal.GDT_Byte,
         )
@@ -181,7 +181,7 @@ def cal_water_mask(config: MPL_Config, input_img_name: str):
 
     bilat_img = filters.rank.median(nir, disk(value))
 
-    gtif = gdal.Open(input_image)
+    gtif = gdal.Open(input_image_file_path)
     geotransform = gtif.GetGeoTransform()
     sourceSR = gtif.GetProjection()
 
@@ -214,6 +214,8 @@ def cal_water_mask(config: MPL_Config, input_img_name: str):
     dst_ds.SetProjection(sourceSR)
     dst_ds.FlushCache()
     dst_ds = None
+    row["mask"] = mask
+    return row
 
 
 def infer_image(config: MPL_Config, input_img_name: str):
@@ -356,8 +358,10 @@ if __name__ == "__main__":
     dataset = create_geotiff_images_dataset(
         config.INPUT_IMAGE_DIR).map(add_virtual_GDAL_file_path)
     print("ray dataset:", dataset.schema())
-    print("1.start caculating wartermask")
-    cal_water_mask(config, image_name)
+    print("1. start calculating watermask")
+    dataset_with_water_mask = dataset.map(fn=cal_water_mask,
+                              fn_kwargs={"config": config})
+    print("dataset with water mask: ", dataset_with_water_mask.schema())
     print("2. start tiling image")
     tile_image(config, image_name)
     print("3. start inferencing")
