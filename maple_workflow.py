@@ -18,8 +18,8 @@ Author  : Rajitha Udwalpola
 import argparse
 import cv2
 import mpl_clean_inference as inf_clean
-import mpl_divideimg_234_water_new as divide
 import mpl_infer_tiles_GPU_new as inference
+import mpl_infer_tiles_ray as ray_inference
 import mpl_process_shapefile as process
 import mpl_stitchshpfile_new as stich
 import numpy as np
@@ -299,7 +299,7 @@ def tile_image(row: Dict[str, Any], config: MPL_Config) -> ray.data.Dataset:
             out_B = cv2.equalizeHist(B)
             out_R = cv2.equalizeHist(R)
             out_G = cv2.equalizeHist(G)
-            final_image = cv2.merge((out_B, out_G, out_R))
+            final_image = np.array(cv2.merge((out_B, out_G, out_R)))
 
             # Upper left (x,y) for each images
             ul_row_divided_img = uly + i * y_resolution
@@ -465,13 +465,16 @@ if __name__ == "__main__":
     print("ray dataset:", dataset.schema())
     print("1. start calculating watermask")
     dataset_with_water_mask = dataset.map(fn=cal_water_mask,
-                              fn_kwargs={"config": config})
+                                          fn_kwargs={"config": config})
     print("dataset with water mask: ", dataset_with_water_mask.schema())
     print("2. start tiling image")
     image_tiles_dataset = dataset_with_water_mask.flat_map(
         fn=tile_image, fn_kwargs={"config": config})
     print("dataset with image tiles: ", image_tiles_dataset.schema())
     print("3. start inferencing")
+    inferenced_dataset = image_tiles_dataset.map(
+        fn=ray_inference.MaskRCNNPredictor, fn_constructor_kwargs={"config": config}, concurrency=2)
+    print("inferenced?", inferenced_dataset.schema())
     infer_image(config, image_name)
     print("4. start stiching")
     stich_shapefile(config, image_name)
