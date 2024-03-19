@@ -317,10 +317,12 @@ def tile_image(row: Dict[str, Any], config: MPL_Config) -> ray.data.Dataset:
         dict_i_j=dict_ij, dict_n=dict_n, x_resolution=x_resolution, y_resolution=y_resolution)
     row["image_metadata"] = image_metadata
     current_row = row
+    new_rows = []
     for image_tile in tiles:
         new_row = current_row
         new_row["image_tile"] = image_tile
-        yield new_row
+        new_rows.append(new_row)
+    return new_rows
 
 
 def infer_image(config: MPL_Config, input_img_name: str):
