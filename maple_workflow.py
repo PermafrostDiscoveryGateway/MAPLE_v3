@@ -19,7 +19,6 @@ import argparse
 import copy
 import cv2
 import mpl_clean_inference as inf_clean
-import mpl_infer_tiles_GPU_new as inference
 import mpl_infer_tiles_ray as ray_inference
 import mpl_process_shapefile as process
 import mpl_stitchshpfile_new as stich
@@ -316,50 +315,6 @@ def tile_image(row: Dict[str, Any], config: MPL_Config) -> List[Dict[str, Any]]:
         new_row["image_tile"] = image_tile
         new_rows.append(new_row)
     return new_rows
-
-
-def infer_image(config: MPL_Config, input_img_name: str):
-    """
-    Inference based on the trained model reperesented by the saved weights
-
-    Parameters
-    ----------
-    config : Contains static configuration information regarding the workflow.
-    input_img_name : Name of the input image file
-    """
-    sys.path.append(config.ROOT_DIR)
-
-    # worker roots
-    worker_divided_img_root = config.DIVIDED_IMAGE_DIR
-
-    # Create subfolder for each image
-    new_file_name = input_img_name.split(".tif")[0]
-    worker_divided_img_subroot = os.path.join(
-        worker_divided_img_root, new_file_name)
-
-    print(worker_divided_img_subroot)
-
-    file1 = os.path.join(worker_divided_img_subroot, "image_data.h5")
-    file2 = os.path.join(worker_divided_img_subroot, "image_param.h5")
-
-    worker_output_shp_root = config.OUTPUT_SHP_DIR
-    worker_output_shp_subroot = os.path.join(
-        worker_output_shp_root, new_file_name)
-    try:
-        shutil.rmtree(worker_output_shp_subroot)
-    except:
-        print("directory deletion failed")
-        pass
-
-    inference.inference_image(
-        config,
-        worker_output_shp_subroot,
-        file1,
-        file2,
-        new_file_name,
-    )
-
-    print("done")
 
 
 def stich_shapefile(config: MPL_Config, input_img_name: str):
