@@ -22,6 +22,7 @@ import mpl_clean_inference as inf_clean
 import mpl_infer_tiles_ray as ray_inference
 import mpl_process_shapefile as process
 import mpl_stitchshpfile_new as stich
+import mpl_stitchshpfile_ray as ray_stitch
 import numpy as np
 import os
 import ray
@@ -317,50 +318,6 @@ def tile_image(row: Dict[str, Any], config: MPL_Config) -> List[Dict[str, Any]]:
     return new_rows
 
 
-def stich_shapefile(config: MPL_Config, input_img_name: str):
-    """
-    Put (stich) the image tiles back to the original
-
-    Parameters
-    ----------
-    config : Contains static configuration information regarding the workflow.
-    input_img_name : Name of the input image file
-
-    Returns
-    -------
-
-    """
-    sys.path.append(config.ROOT_DIR)
-
-    worker_finaloutput_root = config.FINAL_SHP_DIR
-    worker_output_shp_root = config.OUTPUT_SHP_DIR
-
-    # Create subfolder for each image within the worker img root
-    new_file_name = input_img_name.split(".tif")[0]
-
-    worker_finaloutput_subroot = os.path.join(
-        worker_finaloutput_root, new_file_name)
-    worker_output_shp_subroot = os.path.join(
-        worker_output_shp_root, new_file_name)
-
-    try:
-        shutil.rmtree(worker_finaloutput_subroot)
-    except:
-        print("directory deletion failed")
-        pass
-    os.mkdir(worker_finaloutput_subroot)
-
-    stich.stitch_shapefile(
-        config,
-        worker_output_shp_subroot,
-        worker_finaloutput_subroot,
-        new_file_name,
-        new_file_name,
-    )
-
-    return "done Divide"
-
-
 if __name__ == "__main__":
     tf.compat.v1.disable_eager_execution()
     parser = argparse.ArgumentParser(
@@ -426,10 +383,11 @@ if __name__ == "__main__":
     print("3. start inferencing")
     inferenced_dataset = image_tiles_dataset.map(
         fn=ray_inference.MaskRCNNPredictor, fn_constructor_kwargs={"config": config}, concurrency=2)
-    print("inferenced?", inferenced_dataset.schema())
-    """
+    print("inferenced:", inferenced_dataset.schema())
     print("4. start stiching")
-    stich_shapefile(config, image_name)
+    data_per_image = inferenced_dataset.groupby("image_file_name").map_groups(ray_stitch.stitch_shapefile_df)
+    print("grouped by file: ", data_per_image.schema())
+    """
     process.process_shapefile(config, image_name)
     print("5. start cleaning")
     inf_clean.clean_inference_shapes(
