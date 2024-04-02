@@ -16,6 +16,7 @@ Author  : Rajitha Udwalpola
 """
 
 import argparse
+import copy
 import cv2
 import mpl_clean_inference as inf_clean
 import mpl_infer_tiles_GPU_new as inference
@@ -35,7 +36,7 @@ from osgeo import gdal
 from skimage import color, filters, io
 from skimage.morphology import disk
 import tensorflow as tf
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 # work tag
 WORKTAG = 1
@@ -44,8 +45,8 @@ DIETAG = 0
 
 @dataclass
 class ImageMetadata:
-    dict_i_j: dict[float, dict[float, float]]
-    dict_n: dict[float, list[float, float]]
+    len_x_list: int
+    len_y_list: int
     x_resolution: float
     y_resolution: float
 
@@ -54,6 +55,8 @@ class ImageMetadata:
 class ImageTileMetadata:
     upper_left_row: float
     upper_left_col: float
+    id_i: int
+    id_j: int
     tile_num: int
 
 
@@ -196,7 +199,7 @@ def cal_water_mask(row: Dict[str, Any], config: MPL_Config) -> Dict[str, Any]:
     return row
 
 
-def tile_image(row: Dict[str, Any], config: MPL_Config) -> ray.data.Dataset:
+def tile_image(row: Dict[str, Any], config: MPL_Config) -> List[Dict[str, Any]]:
     """
     Tile the image into multiple pre-deifined sized parts so that the processing can be done on smaller parts due to
     processing limitations
@@ -241,16 +244,10 @@ def tile_image(row: Dict[str, Any], config: MPL_Config) -> ray.data.Dataset:
     ysize = input_image_gtif.RasterYSize
     xsize = input_image_gtif.RasterXSize
 
-    # Load the data frame
-    from collections import defaultdict
-
-    dict_ij = defaultdict(dict)
-    dict_n = defaultdict(dict)
     tile_count = 0
 
     y_list = range(0, ysize, int(block_size * (1 - overlap_rate)))
     x_list = range(0, xsize, int(block_size * (1 - overlap_rate)))
-    dict_n["total"] = [len(y_list), len(x_list)]
 
     # ---------------------- Find each Upper left (x,y) for each divided images ----------------------
     #  ***-----------------
@@ -288,9 +285,6 @@ def tile_image(row: Dict[str, Any], config: MPL_Config) -> ray.data.Dataset:
             ):
                 continue
 
-            dict_ij[id_i][id_j] = tile_count
-            dict_n[tile_count] = [id_i, id_j]
-
             # stack three bands into one array
             img = np.stack((band_1_array, band_2_array, band_3_array), axis=2)
             cv2.normalize(img, img, 0, 255, cv2.NORM_MINMAX)
@@ -299,14 +293,14 @@ def tile_image(row: Dict[str, Any], config: MPL_Config) -> ray.data.Dataset:
             out_B = cv2.equalizeHist(B)
             out_R = cv2.equalizeHist(R)
             out_G = cv2.equalizeHist(G)
-            final_image = np.array(cv2.merge((out_B, out_G, out_R)))
+            final_image = np.array(cv2.merge((out_B, out_G, out_R)))        
 
             # Upper left (x,y) for each images
             ul_row_divided_img = uly + i * y_resolution
             ul_col_divided_img = ulx + j * x_resolution
 
             tile_metadata = ImageTileMetadata(
-                upper_left_row=ul_row_divided_img, upper_left_col=ul_col_divided_img, tile_num=tile_count)
+                upper_left_row=ul_row_divided_img, upper_left_col=ul_col_divided_img, tile_num=tile_count, id_i=id_i, id_j=id_j)
             image_tile = ImageTile(
                 tile_values=final_image, tile_metadata=tile_metadata)
             tiles.append(image_tile)
@@ -314,12 +308,11 @@ def tile_image(row: Dict[str, Any], config: MPL_Config) -> ray.data.Dataset:
 
     # --------------- Store all the title as an object file
     image_metadata = ImageMetadata(
-        dict_i_j=dict_ij, dict_n=dict_n, x_resolution=x_resolution, y_resolution=y_resolution)
+        len_x_list=len(x_list), len_y_list=len(y_list), x_resolution=x_resolution, y_resolution=y_resolution)
     row["image_metadata"] = image_metadata
-    current_row = row
     new_rows = []
     for image_tile in tiles:
-        new_row = current_row
+        new_row = copy.deepcopy(row)
         new_row["image_tile"] = image_tile
         new_rows.append(new_row)
     return new_rows
@@ -472,12 +465,14 @@ if __name__ == "__main__":
     print("2. start tiling image")
     image_tiles_dataset = dataset_with_water_mask.flat_map(
         fn=tile_image, fn_kwargs={"config": config})
+    image_tiles_dataset = image_tiles_dataset.drop_columns(["bytes"])
+    image_tiles_dataset = image_tiles_dataset.drop_columns(["mask"])
     print("dataset with image tiles: ", image_tiles_dataset.schema())
     print("3. start inferencing")
     inferenced_dataset = image_tiles_dataset.map(
         fn=ray_inference.MaskRCNNPredictor, fn_constructor_kwargs={"config": config}, concurrency=2)
     print("inferenced?", inferenced_dataset.schema())
-    infer_image(config, image_name)
+    """
     print("4. start stiching")
     stich_shapefile(config, image_name)
     process.process_shapefile(config, image_name)
@@ -487,6 +482,7 @@ if __name__ == "__main__":
         config.PROJECTED_SHP_DIR,
         "./data/input_bound/sample2_out_boundry.shp",
     )
+    """
 
 # Once you are done you can check the output on ArcGIS (win) or else you can check in QGIS (nx) Add the image and the
 # shp, shx, dbf as layers.
