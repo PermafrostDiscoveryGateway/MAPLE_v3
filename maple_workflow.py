@@ -20,6 +20,7 @@ import copy
 import cv2
 import mpl_clean_inference as inf_clean
 import mpl_infer_tiles_ray as ray_inference
+import write_shapefiles_ray as write_shapefiles
 import mpl_process_shapefile as process
 import mpl_stitchshpfile_new as stich
 import mpl_stitchshpfile_ray as ray_stitch
@@ -165,6 +166,8 @@ def cal_water_mask(row: Dict[str, Any], config: MPL_Config) -> Dict[str, Any]:
     gtif = gdal.Open(input_image_file_path)
     geotransform = gtif.GetGeoTransform()
     sourceSR = gtif.GetProjection()
+    # Close the file.
+    gtif = None
 
     x = np.shape(image)[1]
     y = np.shape(image)[0]
@@ -243,6 +246,9 @@ def tile_image(row: Dict[str, Any], config: MPL_Config) -> List[Dict[str, Any]]:
     block_size = config.CROP_SIZE
     ysize = input_image_gtif.RasterYSize
     xsize = input_image_gtif.RasterXSize
+
+    # Close the file.
+    input_image_gtif = None
 
     tile_count = 0
 
@@ -377,7 +383,7 @@ if __name__ == "__main__":
     print("2. start tiling image")
     image_tiles_dataset = dataset_with_water_mask.flat_map(
         fn=tile_image, fn_kwargs={"config": config})
-    image_tiles_dataset = image_tiles_dataset.drop_columns(["bytes"])
+    #image_tiles_dataset = image_tiles_dataset.drop_columns(["bytes"])
     image_tiles_dataset = image_tiles_dataset.drop_columns(["mask"])
     print("dataset with image tiles: ", image_tiles_dataset.schema())
     print("3. start inferencing")
@@ -385,8 +391,12 @@ if __name__ == "__main__":
         fn=ray_inference.MaskRCNNPredictor, fn_constructor_kwargs={"config": config}, concurrency=2)
     print("inferenced:", inferenced_dataset.schema())
     print("4. start stiching")
-    data_per_image = inferenced_dataset.groupby("image_file_name").map_groups(ray_stitch.stitch_shapefile_df)
+    data_per_image = inferenced_dataset.groupby("image_file_name").map_groups(ray_stitch.stitch_shapefile)
     print("grouped by file: ", data_per_image.schema())
+    print("5. experimenting with shapefiles")
+    shapefiles_dataset = data_per_image.map(
+        fn=write_shapefiles.WriteShapefiles, fn_constructor_kwargs={"shpfile_output_dir": config.TEST_SHAPEFILE}, concurrency=2)
+    print("done writing to shapefiles", shapefiles_dataset.schema())
     """
     process.process_shapefile(config, image_name)
     print("5. start cleaning")
