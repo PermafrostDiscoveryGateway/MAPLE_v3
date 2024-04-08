@@ -23,6 +23,7 @@ import mpl_infer_tiles_ray as ray_inference
 import write_shapefiles_ray as write_shapefiles
 import mpl_process_shapefile as process
 import mpl_stitchshpfile_new as stich
+import gdal_virtual_file_system as gdal_vfs
 import mpl_stitchshpfile_ray as ray_stitch
 import numpy as np
 import os
@@ -71,23 +72,8 @@ def create_geotiff_images_dataset(input_image_dir: str) -> ray.data.Dataset:
     return ray.data.read_binary_files(input_image_dir, include_paths=True)
 
 
-def add_virtual_GDAL_file_path(row: Dict[str, Any]) -> Dict[str, Any]:
-    vfs_dir_path = '/vsimem/vsidir/'
-    image_file_name = os.path.basename(row["path"])
-    vfs_filename = os.path.join(vfs_dir_path, image_file_name)
-    dst = gdal.VSIFOpenL(vfs_filename, 'wb+')
-    gdal.VSIFWriteL(row["bytes"], 1, len(row["bytes"]), dst)
-    gdal.VSIFCloseL(dst)
-    row["image_file_name"] = image_file_name
-    row["vfs_image_path"] = vfs_filename
-    return row
-
-
-def test_gdal_operation(row: Dict[str, Any]) -> Dict[str, Any]:
-    input_image_gtif = gdal.Open(row["path"])
-    vfs_image_gtif = gdal.Open(row["vfs_image_path"])
-    row["gdal_test"] = np.array_equal(input_image_gtif.GetRasterBand(
-        1).ReadAsArray(), vfs_image_gtif.GetRasterBand(1).ReadAsArray())
+def add_image_name(row: Dict[str, Any]) -> Dict[str, Any]:
+    row["image_name"] = os.path.basename(row["path"]).split(".tif")[0]
     return row
 
 
@@ -100,14 +86,13 @@ def cal_water_mask(row: Dict[str, Any], config: MPL_Config) -> Dict[str, Any]:
     row : Row in Ray Dataset, there is one row per image.
     config : Contains static configuration information regarding the workflow.
     """
-    image_name = row["image_file_name"].split(".tif")[0]
-
     # os.path.join(worker_root, "water_shp")
     worker_water_root = config.WATER_MASK_DIR
     temp_water_root = (
         config.TEMP_W_IMG_DIR
     )  # os.path.join(worker_root, "temp_8bitmask")
 
+    image_name = row["image_name"]
     worker_water_subroot = os.path.join(worker_water_root, image_name)
     temp_water_subroot = os.path.join(temp_water_root, image_name)
     # Prepare to make directories to create the files
@@ -138,7 +123,10 @@ def cal_water_mask(row: Dict[str, Any], config: MPL_Config) -> Dict[str, Any]:
     # %% Median and Otsu
     value = 5
 
-    input_image_file_path = row["vfs_image_path"]
+    # Create virtual file system file for image to use GDAL's file apis.
+    vfs = gdal_vfs.GDALVirtualFileSystem(
+        file_path=row["path"], file_bytes=row["bytes"])
+    virtual_file_path = vfs.create_virtual_file()
 
     # UPDATED CODE - amal 01/11/2023
     # cmd line execution thrown exceptions unable to capture
@@ -148,7 +136,7 @@ def cal_water_mask(row: Dict[str, Any], config: MPL_Config) -> Dict[str, Any]:
     try:
         gdal.Translate(
             destName=output_tif_8b_file,
-            srcDS=input_image_file_path,
+            srcDS=virtual_file_path,
             format="GTiff",
             outputType=gdal.GDT_Byte,
         )
@@ -163,11 +151,12 @@ def cal_water_mask(row: Dict[str, Any], config: MPL_Config) -> Dict[str, Any]:
 
     bilat_img = filters.rank.median(nir, disk(value))
 
-    gtif = gdal.Open(input_image_file_path)
+    gtif = gdal.Open(virtual_file_path)
     geotransform = gtif.GetGeoTransform()
     sourceSR = gtif.GetProjection()
     # Close the file.
     gtif = None
+    vfs.close_virtual_file()
 
     x = np.shape(image)[1]
     y = np.shape(image)[0]
@@ -213,7 +202,11 @@ def tile_image(row: Dict[str, Any], config: MPL_Config) -> List[Dict[str, Any]]:
     input_img_name : Name of the input image
     """
 
-    input_image_gtif = gdal.Open(row["vfs_image_path"])
+    # Create virtual file system file for image to use GDAL's file apis.
+    vfs = gdal_vfs.GDALVirtualFileSystem(
+        file_path=row["path"], file_bytes=row["bytes"])
+    virtual_image_file_path = vfs.create_virtual_file()
+    input_image_gtif = gdal.Open(virtual_image_file_path)
     mask = row["mask"]
 
     # convert the original image into the geo cordinates for further processing using gdal
@@ -249,6 +242,7 @@ def tile_image(row: Dict[str, Any], config: MPL_Config) -> List[Dict[str, Any]]:
 
     # Close the file.
     input_image_gtif = None
+    vfs.close_virtual_file()
 
     tile_count = 0
 
@@ -299,7 +293,7 @@ def tile_image(row: Dict[str, Any], config: MPL_Config) -> List[Dict[str, Any]]:
             out_B = cv2.equalizeHist(B)
             out_R = cv2.equalizeHist(R)
             out_G = cv2.equalizeHist(G)
-            final_image = np.array(cv2.merge((out_B, out_G, out_R)))        
+            final_image = np.array(cv2.merge((out_B, out_G, out_R)))
 
             # Upper left (x,y) for each images
             ul_row_divided_img = uly + i * y_resolution
@@ -374,7 +368,7 @@ if __name__ == "__main__":
 
     print("0. load geotiffs into ray dataset")
     dataset = create_geotiff_images_dataset(
-        config.INPUT_IMAGE_DIR).map(add_virtual_GDAL_file_path)
+        config.INPUT_IMAGE_DIR).map(add_image_name)
     print("ray dataset:", dataset.schema())
     print("1. start calculating watermask")
     dataset_with_water_mask = dataset.map(fn=cal_water_mask,
@@ -383,7 +377,6 @@ if __name__ == "__main__":
     print("2. start tiling image")
     image_tiles_dataset = dataset_with_water_mask.flat_map(
         fn=tile_image, fn_kwargs={"config": config})
-    #image_tiles_dataset = image_tiles_dataset.drop_columns(["bytes"])
     image_tiles_dataset = image_tiles_dataset.drop_columns(["mask"])
     print("dataset with image tiles: ", image_tiles_dataset.schema())
     print("3. start inferencing")
@@ -391,7 +384,8 @@ if __name__ == "__main__":
         fn=ray_inference.MaskRCNNPredictor, fn_constructor_kwargs={"config": config}, concurrency=2)
     print("inferenced:", inferenced_dataset.schema())
     print("4. start stiching")
-    data_per_image = inferenced_dataset.groupby("image_file_name").map_groups(ray_stitch.stitch_shapefile)
+    data_per_image = inferenced_dataset.groupby(
+        "image_name").map_groups(ray_stitch.stitch_shapefile)
     print("grouped by file: ", data_per_image.schema())
     print("5. experimenting with shapefiles")
     shapefiles_dataset = data_per_image.map(
