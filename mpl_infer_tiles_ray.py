@@ -9,17 +9,15 @@ PI      : Chandi Witharana
 Author  : Rajitha Udwalpola
 """
 
-import copy
-import model as modellib
-import numpy as np
-import ray
-import tensorflow as tf
-
 from dataclasses import dataclass
-from mpl_config import MPL_Config, PolygonConfig
-from skimage.measure import find_contours
 from typing import Any, Dict, List
 
+import numpy as np
+import tensorflow as tf
+from skimage.measure import find_contours
+
+import model as modellib
+from mpl_config import MPL_Config, PolygonConfig
 
 @dataclass
 class ShapefileResult:
@@ -90,6 +88,7 @@ class MaskRCNNPredictor:
                 except:
                     contours = []
                     pass
+
         row["num_polygons_in_tile"] = r["masks"].shape[2]
         row["tile_shapefile_results"] = ShapefileResults(shapefile_results)
         return row

@@ -48,6 +48,8 @@ class MPL_Config(object):
         self.TEMP_W_IMG_DIR = self.ROOT_DIR + r"/data/water_mask/temp"
         self.OUTPUT_IMAGE_DIR = self.ROOT_DIR + r"/data/output_img"
         self.WORKER_ROOT = self.ROOT_DIR + r"/data"
+        self.MODEL_DIR = self.ROOT_DIR + r"/local_dir/datasets/logs"
+        self.TEST_SHAPEFILE = self.ROOT_DIR + r"/data/ray_shapefiles"
 
         # ADDED to include inference cleaning post-processing
         self.CLEAN_DATA_DIR = self.ROOT_DIR + r"/data/cln_data"
