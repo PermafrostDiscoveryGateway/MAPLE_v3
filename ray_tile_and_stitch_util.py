@@ -34,6 +34,7 @@ class ImageMetadata:
 class ImageTileMetadata:
     upper_left_row: float
     upper_left_col: float
+    # Indexes that are used to reconstruct image after tiling.
     id_i: int
     id_j: int
     tile_num: int
@@ -187,6 +188,17 @@ def tile_image(row: Dict[str, Any], config: MPL_Config) -> List[Dict[str, Any]]:
 
 
 def stitch_shapefile(group: pd.DataFrame):
+    """
+    Create a shapefile for each image.
+    Note that normally ray rows are dictionaries but this is a group because we've called
+    grouped by. When ray does a groupby and the rows can't be represented in numpy arrays
+    it uses pandas dataframe.
+
+    Parameters
+    ----------
+    group: a pandas dataframe that has all of the shapefile information for each tile in the
+            image.
+    """
     image_shapefile_results = []
     temp_polygon_dict = defaultdict(dict)
     dict_ij = defaultdict(dict)
