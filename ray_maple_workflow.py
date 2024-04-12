@@ -113,3 +113,5 @@ if __name__ == "__main__":
 
 # Once you are done you can check the output on ArcGIS (win) or else you can check in QGIS (nx) Add the image and the
 # shp, shx, dbf as layers.
+# You can also look at compare_shapefile_features.py for how to compare the features in two shapefiles.
+# You can also use 'ogrinfo -so -al <path to shapefile>' on the command line to examine a shapefile.

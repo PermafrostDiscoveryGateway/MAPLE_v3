@@ -18,7 +18,7 @@ def feature_to_hashable(feature):
     return (geometry_repr, attributes)
 
 
-def compare_unordered_shapefiles(file1, file2):
+def compare_shapefile_features(file1, file2):
     """Compares shapefiles using sets. This approach doesn't work if there are duplicate features in one of the files."""
     with fiona.open(file1) as src1, fiona.open(file2) as src2:
         set1 = {feature_to_hashable(feature) for feature in src1}
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         print("Error: Please provide both shapefile paths.")
         sys.exit(1)
 
-    compare_unordered_shapefiles(args.file1, args.file2)
+    compare_shapefile_features(args.file1, args.file2)
 
 # Usage:
-# python compare_unordered_shapefiles.py <path to file1> <path to file2>
+# python compare_shapefile_features.py <path to file1> <path to file2>
