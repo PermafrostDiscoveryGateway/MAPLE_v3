@@ -124,8 +124,8 @@ class WriteShapefiles:
             length = max(edge_length)
             width = min(edge_length)
 
-            w.record(Class=shapefile_result.class_id, Sensor=image_name[0:1], Date=image_name[1:2],
-                     Time=image_name[2:3], CatalogID=image_name[3:4], Area=poly.area,
+            w.record(Class=shapefile_result.class_id, Sensor=image_name[0:4], Date=image_name[5:13],
+                     Time=image_name[13:19], CatalogID=image_name[20:36], Area=poly.area,
                      CentroidX=centroid.x, CentroidY=centroid.y, Perimeter=poly.length, Length=length, Width=width)
         w.close()
 
