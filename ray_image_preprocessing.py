@@ -25,16 +25,17 @@ def cal_water_mask(row: Dict[str, Any], config: MPL_Config) -> Dict[str, Any]:
     """
     This will calculate the water mask to avoid (inference) processing of the masked areas with water
     Uses gdal to transform the image into the required format.
+    The result of this function is that it will add a "mask" column with the water mask to each row.
+    It also writes the water mask to the config.WATER_MASK_DIR.
     Parameters
     ----------
     row : Row in Ray Dataset, there is one row per image.
     config : Contains static configuration information regarding the workflow.
     """
-    # os.path.join(worker_root, "water_shp")
     worker_water_root = config.WATER_MASK_DIR
     temp_water_root = (
         config.TEMP_W_IMG_DIR
-    )  # os.path.join(worker_root, "temp_8bitmask")
+    ) 
 
     image_name = row["image_name"]
     worker_water_subroot = os.path.join(worker_water_root, image_name)

@@ -1,3 +1,8 @@
+"""
+Class that manages open and closing of a single gdal file.
+The pattern is to instantiate the class, call create to open it and then 
+call close to close the file.
+"""
 import os
 from osgeo import gdal
 

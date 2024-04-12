@@ -108,7 +108,7 @@ if __name__ == "__main__":
           data_per_image.schema())
     print("5. Write shapefiles")
     shapefiles_dataset = data_per_image.map(
-        fn=ray_write_shapefiles.WriteShapefiles, fn_constructor_kwargs={"shpfile_output_dir": config.TEST_SHAPEFILE}, concurrency=2)
+        fn=ray_write_shapefiles.WriteShapefiles, fn_constructor_kwargs={"shpfile_output_dir": config.RAY_SHAPEFILES}, concurrency=2)
     print("Done writing shapefiles", shapefiles_dataset.schema())
 
 # Once you are done you can check the output on ArcGIS (win) or else you can check in QGIS (nx) Add the image and the
