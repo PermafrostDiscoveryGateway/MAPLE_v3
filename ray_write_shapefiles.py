@@ -131,6 +131,7 @@ class WriteShapefiles:
 
     def __call__(self, row: Dict[str, Any]) -> Dict[str, Any]:
         image_name = row["image_name"]
+        print("Writing shapefiles for:", image_name)
         shapefile_output_dir_for_image = os.path.join(
             self.shpfile_output_dir, f"{image_name}.shp")
         self.write_shapefile(row, shapefile_output_dir_for_image)

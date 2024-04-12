@@ -21,10 +21,10 @@ import tensorflow as tf
 import ray
 
 from mpl_config import MPL_Config
-import mpl_preprocessing as preprocessing
-import mpl_infer_tiles_ray as ray_inference
-import write_shapefiles_ray as write_shapefiles
-import mpl_tile_and_stitch_ray_util as tile_and_stitch_util
+import ray_image_preprocessing
+import ray_infer_tiles as ray_inference
+import ray_write_shapefiles
+import ray_tile_and_stitch_util
 
 
 def create_geotiff_images_dataset(input_image_dir: str) -> ray.data.Dataset:
@@ -89,12 +89,12 @@ if __name__ == "__main__":
         config.INPUT_IMAGE_DIR).map(add_image_name)
     print("Ray dataset schema:", dataset.schema())
     print("1. Start calculating watermask")
-    dataset_with_water_mask = dataset.map(fn=preprocessing.cal_water_mask,
+    dataset_with_water_mask = dataset.map(fn=ray_image_preprocessing.cal_water_mask,
                                           fn_kwargs={"config": config})
     print("Dataset schema with water mask: ", dataset_with_water_mask.schema())
     print("2. Start tiling image")
     image_tiles_dataset = dataset_with_water_mask.flat_map(
-        fn=tile_and_stitch_util.tile_image, fn_kwargs={"config": config})
+        fn=ray_tile_and_stitch_util.tile_image, fn_kwargs={"config": config})
     image_tiles_dataset = image_tiles_dataset.drop_columns(["mask"])
     print("Dataset schema with image tiles: ", image_tiles_dataset.schema())
     print("3. Start inferencing")
@@ -103,12 +103,12 @@ if __name__ == "__main__":
     print("Dataset schema with inferenced tiles: ", inferenced_dataset.schema())
     print("4. Start stitching")
     data_per_image = inferenced_dataset.groupby(
-        "image_name").map_groups(tile_and_stitch_util.stitch_shapefile)
+        "image_name").map_groups(ray_tile_and_stitch_util.stitch_shapefile)
     print("Dataset schema where each row is an image (result of a group by tile): ",
           data_per_image.schema())
     print("5. Write shapefiles")
     shapefiles_dataset = data_per_image.map(
-        fn=write_shapefiles.WriteShapefiles, fn_constructor_kwargs={"shpfile_output_dir": config.TEST_SHAPEFILE}, concurrency=2)
+        fn=ray_write_shapefiles.WriteShapefiles, fn_constructor_kwargs={"shpfile_output_dir": config.TEST_SHAPEFILE}, concurrency=2)
     print("Done writing shapefiles", shapefiles_dataset.schema())
 
 # Once you are done you can check the output on ArcGIS (win) or else you can check in QGIS (nx) Add the image and the
