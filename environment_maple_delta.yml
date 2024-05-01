@@ -1,6 +1,7 @@
 name: maple_py310_ray
 channels:
   - defaults
+  - conda-forge
 dependencies:
   - gdal
   - fiona
@@ -8,9 +9,9 @@ dependencies:
   - scikit-image
   - shapely
   - pip=23.3.1
+  - tensorflow
+  - pandas
+  - pyarrow
+  - requests
   - pip:
-    - tensorflow[and-cuda]
-    - opencv-python
-    - ray
-    - pandas
-    - pyarrow
+    - ray[default]
