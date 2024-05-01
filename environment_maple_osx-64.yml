@@ -1,7 +1,8 @@
-name: maple_py310_ray
+name: maple_py310_ray_osx-64
 channels:
   - defaults
 dependencies:
+  - python=3.10
   - gdal
   - fiona
   - pyshp
@@ -9,8 +10,8 @@ dependencies:
   - shapely
   - pip=23.3.1
   - pip:
-    - tensorflow[and-cuda]
+    - tensorflow
     - opencv-python
-    - ray
-    - pandas
+    - ray[default]
+    - pandas==2.1.4
     - pyarrow

@@ -15,6 +15,7 @@ PI      : Chandi Witharana
 
 import argparse
 import os
+import sys
 from typing import Any, Dict
 
 import tensorflow as tf
@@ -25,6 +26,8 @@ import ray_image_preprocessing
 import ray_infer_tiles as ray_inference
 import ray_write_shapefiles
 import ray_tile_and_stitch_util
+from mpl_workflow_create_dir_struct import create_maple_dir_structure
+from ray_stage_input import download_input_files_clowder, download_model_weights_clowder, upload_output_clowder
 
 
 def create_geotiff_images_dataset(input_image_dir: str) -> ray.data.Dataset:
@@ -40,6 +43,26 @@ if __name__ == "__main__":
     tf.compat.v1.disable_eager_execution()
     parser = argparse.ArgumentParser(
         description="Extract IWPs from satellite image scenes using MAPLE."
+    )
+
+    # Required Arguments
+    parser.add_argument(
+        "--host",
+        required=True,
+        default="http://localhost:8000/",
+        help="Clowder host",
+    )
+
+    parser.add_argument(
+        "--dataset_id",
+        required=True,
+        help="Clowder dataset from which to get input files and model weights",
+    )
+
+    parser.add_argument(
+        "--key",
+        required=True,
+        help="Clowder API key",
     )
 
     # Optional Arguments
@@ -62,7 +85,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--weight_file",
         required=False,
-        default="hyp_best_train_weights_final.h5",
+        default="data/ray_model_weights/hyp_best_train_weights_final.h5",
         help="The file path to where the model weights can be found. Should be "
         "relative to the root directory.",
     )
@@ -83,6 +106,18 @@ if __name__ == "__main__":
     config = MPL_Config(
         args.root_dir, args.weight_file, num_gpus_per_core=args.gpus_per_core
     )
+    host = args.host
+    dataset_id = args.dataset_id
+    key = args.key
+
+    print("Create required directory structure")
+    create_maple_dir_structure()
+
+    print("Stage input files locally")
+    download_input_files_clowder(host, dataset_id, key, config.INPUT_IMAGE_DIR)
+
+    print("Stage model weights locally")
+    download_model_weights_clowder(host, dataset_id, key, config.MODEL_WEIGHTS_DIR)
 
     print("0. Load geotiffs into ray dataset")
     dataset = create_geotiff_images_dataset(
@@ -109,6 +144,8 @@ if __name__ == "__main__":
     print("5. Write shapefiles")
     shapefiles_dataset = data_per_image.map(
         fn=ray_write_shapefiles.WriteShapefiles, fn_constructor_kwargs={"shpfile_output_dir": config.RAY_SHAPEFILES}, concurrency=2)
+    print("6. Upload shapefiles")
+    upload_output_clowder(host, dataset_id, key, config.RAY_SHAPEFILES)
     print("Done writing shapefiles", shapefiles_dataset.schema())
 
 # Once you are done you can check the output on ArcGIS (win) or else you can check in QGIS (nx) Add the image and the

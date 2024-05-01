@@ -102,6 +102,9 @@ def create_maple_dir_structure():
     create_dir_path(os.path.join(config.WORKER_ROOT, "neighbors/"))
     create_dir_path(os.path.join(config.WORKER_ROOT, "projected_shp/"))
     create_dir_path(config.CLEAN_DATA_DIR)
+    create_dir_path(config.MODEL_DIR)
+    create_dir_path(config.MODEL_WEIGHTS_DIR)
+    create_dir_path(config.RAY_SHAPEFILES)
 
 
 if __name__ == "__main__":
