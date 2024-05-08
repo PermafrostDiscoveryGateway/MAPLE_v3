@@ -69,4 +69,4 @@ For the basic vanilla configuration you only need a list of input tiff files in 
 
 <h2 id="weight-file"> Weight File </h2>
 
-This is the [trainded weight file](https://drive.google.com/file/d/1R51e8YqTKvc_5lq7wSKEbu1G1nyV1-YZ/view?usp=drive_link) that is required for the model to do the inferencing
+This is the [trainded weight file]([https://drive.google.com/file/d/1R51e8YqTKvc_5lq7wSKEbu1G1nyV1-YZ/view?usp=drive_link](https://uconn-my.sharepoint.com/:u:/g/personal/amal_perera_uconn_edu/EQDp2IqNtMpS0Ri7t-A_gzkBHkmA5n8Vh8flLZxcD2TfUw?e=EcrPSX) that is required for the model to do the inferencing
