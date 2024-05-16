@@ -27,8 +27,10 @@ import ray_write_shapefiles
 import ray_tile_and_stitch_util
 
 
-def create_geotiff_images_dataset(input_image_dir: str) -> ray.data.Dataset:
-    return ray.data.read_binary_files(input_image_dir, include_paths=True)
+def create_geotiff_images_dataset(config: MPL_Config) -> ray.data.Dataset:
+    if config.GCP_FILESYSTEM is not None:
+        return ray.data.read_binary_files(config.INPUT_IMAGE_DIR + "/", filesystem=config.GCP_FILESYSTEM, include_paths=True)
+    return ray.data.read_binary_files(config.INPUT_IMAGE_DIR, include_paths=True)
 
 
 def add_image_name(row: Dict[str, Any]) -> Dict[str, Any]:
@@ -37,6 +39,7 @@ def add_image_name(row: Dict[str, Any]) -> Dict[str, Any]:
 
 
 if __name__ == "__main__":
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/usr/local/google/home/kaylahardie/.config/gcloud/application_default_credentials.json"
     tf.compat.v1.disable_eager_execution()
     parser = argparse.ArgumentParser(
         description="Extract IWPs from satellite image scenes using MAPLE."
@@ -56,7 +59,9 @@ if __name__ == "__main__":
         required=False,
         default="",
         help="The directory path from where the workflow is running. If none is "
-        "provided, the current working directory will be used by the workflow.",
+        "provided, the current working directory will be used by the workflow. "
+        "If the root directory starts with gcs:// or gs:// then the workflow will "
+        "read and write to the google cloud storage buckets.",
     )
 
     parser.add_argument(
@@ -85,8 +90,7 @@ if __name__ == "__main__":
     )
 
     print("0. Load geotiffs into ray dataset")
-    dataset = create_geotiff_images_dataset(
-        config.INPUT_IMAGE_DIR).map(add_image_name)
+    dataset = create_geotiff_images_dataset(config).map(add_image_name)
     print("Ray dataset schema:", dataset.schema())
     print("1. Start calculating watermask")
     dataset_with_water_mask = dataset.map(fn=ray_image_preprocessing.cal_water_mask,
@@ -108,9 +112,9 @@ if __name__ == "__main__":
           data_per_image.schema())
     print("5. Write shapefiles")
     shapefiles_dataset = data_per_image.map(
-        fn=ray_write_shapefiles.WriteShapefiles, fn_constructor_kwargs={"shpfile_output_dir": config.RAY_SHAPEFILES}, concurrency=2)
+        fn=ray_write_shapefiles.WriteShapefiles, fn_constructor_kwargs={"config": config}, concurrency=2)
     print("Done writing shapefiles", shapefiles_dataset.schema())
-
+    
 # Once you are done you can check the output on ArcGIS (win) or else you can check in QGIS (nx) Add the image and the
 # shp, shx, dbf as layers.
 # You can also look at compare_shapefile_features.py for how to compare the features in two shapefiles.

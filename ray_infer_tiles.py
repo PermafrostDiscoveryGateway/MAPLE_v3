@@ -10,6 +10,8 @@ Author  : Rajitha Udwalpola
 """
 
 from dataclasses import dataclass
+import os
+import tempfile
 from typing import Any, Dict, List
 
 import numpy as np
@@ -19,10 +21,12 @@ from skimage.measure import find_contours
 import model as modellib
 from mpl_config import MPL_Config, PolygonConfig
 
+
 @dataclass
 class ShapefileResult:
     polygons: np.array
     class_id: int
+
 
 @dataclass
 class ShapefileResults:
@@ -44,10 +48,21 @@ class MaskRCNNPredictor:
 
         with tf.device(self.device):
             self.model = modellib.MaskRCNN(
-                mode="inference", model_dir=self.config.MODEL_DIR, config=PolygonConfig()
-            )
-        self.model.keras_model.load_weights(
-            self.config.WEIGHT_PATH, by_name=True)
+                mode="inference", model_dir=self.config.MODEL_DIR, config=PolygonConfig())
+
+        if self.config.GCP_FILESYSTEM is not None:
+            # Create a temporary file because keras load weights doesn't work with a hd5 file object,
+            # it only works with a file path. We need the file object to do the authentication.
+            with tempfile.NamedTemporaryFile(suffix=".h5", delete=False) as temp_file:
+                # Copy the GCS file to the temporary file
+                config.GCP_FILESYSTEM.get(self.config.WEIGHT_PATH, temp_file.name)
+
+                # Load weights from the temporary file
+                self.model.keras_model.load_weights(temp_file.name, by_name=True)
+            os.remove(temp_file.name)
+        else:
+            self.model.keras_model.load_weights(self.config.WEIGHT_PATH, by_name=True)
+        
 
     def __call__(self, row: Dict[str, Any]) -> Dict[str, Any]:
 

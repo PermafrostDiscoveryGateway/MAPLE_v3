@@ -11,6 +11,9 @@ Author  : Rajitha Udwalpola
 
 import os
 
+import gcsfs
+import google.auth
+
 from config import Config
 
 
@@ -34,12 +37,12 @@ class MPL_Config(object):
         crop_size=200,
         num_gpus_per_core=1,
     ):
-        ## Do not change this section
+        # Do not change this section
         # Code depends on the relative locations indicated so should not change
         # Code expects some of the locations to be available when executing.
         # -----------------------------------------------------------------
         self.ROOT_DIR = root_dir if root_dir else os.getcwd()
-        self.INPUT_IMAGE_DIR = self.ROOT_DIR + r"/data/input_img_local"
+        self.INPUT_IMAGE_DIR = self.ROOT_DIR + r"/data/input_img"
         self.DIVIDED_IMAGE_DIR = self.ROOT_DIR + r"/data/divided_img"
         self.OUTPUT_SHP_DIR = self.ROOT_DIR + r"/data/output_shp"
         self.FINAL_SHP_DIR = self.ROOT_DIR + r"/data/final_shp"
@@ -49,7 +52,15 @@ class MPL_Config(object):
         self.OUTPUT_IMAGE_DIR = self.ROOT_DIR + r"/data/output_img"
         self.WORKER_ROOT = self.ROOT_DIR + r"/data"
         self.MODEL_DIR = self.ROOT_DIR + r"/local_dir/datasets/logs"
-        self.RAY_SHAPEFILES = self.ROOT_DIR + r"/data/ray_shapefiles"
+        self.RAY_OUTPUT_SHAPEFILES_DIR = self.ROOT_DIR + r"/data/ray_output_shapefiles"
+
+        self.GCP_FILESYSTEM = None
+        if (self.ROOT_DIR.startswith(
+            "gcs://") or self.ROOT_DIR.startswith("gs://")):
+            creds, _ = google.auth.load_credentials_from_file(
+                "/usr/local/google/home/kaylahardie/.config/gcloud/application_default_credentials.json", scopes=["https://www.googleapis.com/auth/cloud-platform"])
+            self.GCP_FILESYSTEM = gcsfs.GCSFileSystem(
+                project="pdg-project-406720", token=creds)
 
         # ADDED to include inference cleaning post-processing
         self.CLEAN_DATA_DIR = self.ROOT_DIR + r"/data/cln_data"

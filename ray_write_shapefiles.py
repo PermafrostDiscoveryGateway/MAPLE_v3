@@ -1,11 +1,14 @@
 import os
 import shutil
-import shapefile
-
-from osgeo import gdal, osr
-import gdal_virtual_file_system as gdal_vfs
-from shapely.geometry import Polygon, Point
+from io import BytesIO 
 from typing import Any, Dict
+
+import shapefile
+from osgeo import gdal, osr
+from shapely.geometry import Polygon, Point
+
+import gdal_virtual_file_system as gdal_vfs
+from mpl_config import MPL_Config
 
 
 def delete_and_create_dir(dir: str):
@@ -24,10 +27,11 @@ def delete_and_create_dir(dir: str):
 class WriteShapefiles:
     def __init__(
         self,
-        shpfile_output_dir: str
+        config: MPL_Config
     ):
-        self.shpfile_output_dir = shpfile_output_dir
-        delete_and_create_dir(self.shpfile_output_dir)
+        self.config = config
+        if self.config.GCP_FILESYSTEM is None:
+            delete_and_create_dir(self.config.RAY_SHAPEFILES)
 
     def get_coordinate_system_info(self, file_path: str, file_bytes: bytes):
         try:
@@ -84,9 +88,12 @@ class WriteShapefiles:
             print(wkt)
             if wkt is not None:
                 # Write the WKT to a .prj file
-                with open(prj_file_path, "w") as prj_file:
-                    prj_file.write(wkt)
-
+                if self.config.GCP_FILESYSTEM is not None:
+                    with self.config.GCP_FILESYSTEM.open(prj_file_path, "w") as prj_file:
+                        prj_file.write(wkt)
+                else:
+                    with open(prj_file_path, "w") as prj_file:
+                        prj_file.write(wkt)
                 print(
                     f"Coordinate system information written to {prj_file_path}")
             else:
@@ -95,8 +102,7 @@ class WriteShapefiles:
         except Exception as e:
             print(f"Error when trying to write the prj file: {e}")
 
-    def write_shapefile(self, row: Dict[str, Any], shapefile_output_dir_for_image: str):
-        w = shapefile.Writer(shapefile_output_dir_for_image)
+    def write_shapefile_helper(self, row: Dict[str, Any], w):
         w.field("Class", "C", size=5)
         w.field("Sensor", "C", "10")
         w.field("Date", "C", "10")
@@ -127,18 +133,35 @@ class WriteShapefiles:
             w.record(Class=shapefile_result.class_id, Sensor=image_name[0:4], Date=image_name[5:13],
                      Time=image_name[13:19], CatalogID=image_name[20:36], Area=poly.area,
                      CentroidX=centroid.x, CentroidY=centroid.y, Perimeter=poly.length, Length=length, Width=width)
-        w.close()
+
+    def write_shapefile(self, row: Dict[str, Any], shapefile_output_dir_for_image):
+        if self.config.GCP_FILESYSTEM is not None:
+            with BytesIO() as shp_mem, BytesIO() as shx_mem, BytesIO() as dbf_mem:
+                with shapefile.Writer(shp=shp_mem, shx=shx_mem, dbf=dbf_mem) as writer:
+                    self.write_shapefile_helper(row, writer)
+                    writer.close()
+
+                with self.config.GCP_FILESYSTEM.open(f"{shapefile_output_dir_for_image}.shp", 'wb') as shp_file:
+                    shp_file.write(shp_mem.getvalue())
+                with self.config.GCP_FILESYSTEM.open(f"{shapefile_output_dir_for_image}.shx", 'wb') as shx_file:
+                    shx_file.write(shx_mem.getvalue())
+                with self.config.GCP_FILESYSTEM.open(f"{shapefile_output_dir_for_image}.dbf", 'wb') as dbf_file:
+                    dbf_file.write(dbf_mem.getvalue())
+        else:
+            writer = shapefile.Writer(f"{shapefile_output_dir_for_image}.shp")
+            self.write_shapefile_helper(row, writer)
+            writer.close()
+
+
+
 
     def __call__(self, row: Dict[str, Any]) -> Dict[str, Any]:
         image_name = row["image_name"]
         print("Writing shapefiles for:", image_name)
         shapefile_output_dir_for_image = os.path.join(
-            self.shpfile_output_dir, f"{image_name}.shp")
+            self.config.RAY_OUTPUT_SHAPEFILES_DIR, image_name)
         self.write_shapefile(row, shapefile_output_dir_for_image)
-
-        prj_output_dir_for_image = os.path.join(
-            self.shpfile_output_dir, f"{image_name}.prj")
         self.write_prj_file(
-            geotiff_path=row["path"], geotiff_bytes=row["bytes"], prj_file_path=prj_output_dir_for_image)
+            geotiff_path=row["path"], geotiff_bytes=row["bytes"], prj_file_path=f"{shapefile_output_dir_for_image}.prj")
         row["shapefile_output_dir"] = shapefile_output_dir_for_image
         return row
