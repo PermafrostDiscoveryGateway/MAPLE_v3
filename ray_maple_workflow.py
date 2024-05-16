@@ -39,7 +39,6 @@ def add_image_name(row: Dict[str, Any]) -> Dict[str, Any]:
 
 
 if __name__ == "__main__":
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/usr/local/google/home/kaylahardie/.config/gcloud/application_default_credentials.json"
     tf.compat.v1.disable_eager_execution()
     parser = argparse.ArgumentParser(
         description="Extract IWPs from satellite image scenes using MAPLE."
@@ -65,6 +64,16 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "--adc_dir",
+        required=False,
+        default="",
+        help="The directory path for application default credentials (adc). This path must be set if "
+        "you want to give ray access to your gcs buckets when you are running this workflow on your "
+        "*local computer*. It is necessary for service account impersonation, which is used to give "
+        "this code access to your storage bucket when running the code locally."
+    )
+
+    parser.add_argument(
         "--weight_file",
         required=False,
         default="hyp_best_train_weights_final.h5",
@@ -86,7 +95,7 @@ if __name__ == "__main__":
 
     image_name = args.image
     config = MPL_Config(
-        args.root_dir, args.weight_file, num_gpus_per_core=args.gpus_per_core
+        args.root_dir, args.adc_dir, args.weight_file, num_gpus_per_core=args.gpus_per_core
     )
 
     print("0. Load geotiffs into ray dataset")

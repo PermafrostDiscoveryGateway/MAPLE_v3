@@ -32,6 +32,7 @@ class MPL_Config(object):
     def __init__(
         self,
         root_dir="",
+        adc_dir="",
         weight_file="hyp_best_train_weights_final.h5",
         logging=True,
         crop_size=200,
@@ -56,11 +57,17 @@ class MPL_Config(object):
 
         self.GCP_FILESYSTEM = None
         if (self.ROOT_DIR.startswith(
-            "gcs://") or self.ROOT_DIR.startswith("gs://")):
-            creds, _ = google.auth.load_credentials_from_file(
-                "/usr/local/google/home/kaylahardie/.config/gcloud/application_default_credentials.json", scopes=["https://www.googleapis.com/auth/cloud-platform"])
-            self.GCP_FILESYSTEM = gcsfs.GCSFileSystem(
-                project="pdg-project-406720", token=creds)
+                "gcs://") or self.ROOT_DIR.startswith("gs://")):
+            if adc_dir:
+                print("You are using application default credentials to authenticate.")
+                creds, _ = google.auth.load_credentials_from_file(
+                    adc_dir, scopes=["https://www.googleapis.com/auth/cloud-platform"])
+                self.GCP_FILESYSTEM = gcsfs.GCSFileSystem(
+                    project="pdg-project-406720", token=creds)
+            else:
+                print("Please specify an application default credentials directory if you are running this code on your local computer.")
+                self.GCP_FILESYSTEM = gcsfs.GCSFileSystem(
+                    project="pdg-project-406720")
 
         # ADDED to include inference cleaning post-processing
         self.CLEAN_DATA_DIR = self.ROOT_DIR + r"/data/cln_data"
