@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 import shutil
 from io import BytesIO 
 from typing import Any, Dict
@@ -30,6 +31,7 @@ class WriteShapefiles:
         config: MPL_Config
     ):
         self.config = config
+        self.current_timestamp_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         if self.config.GCP_FILESYSTEM is None:
             delete_and_create_dir(self.config.RAY_SHAPEFILES)
 
@@ -159,7 +161,7 @@ class WriteShapefiles:
         image_name = row["image_name"]
         print("Writing shapefiles for:", image_name)
         shapefile_output_dir_for_image = os.path.join(
-            self.config.RAY_OUTPUT_SHAPEFILES_DIR, image_name)
+            self.config.RAY_OUTPUT_SHAPEFILES_DIR, self.current_timestamp_str, image_name)
         self.write_shapefile(row, shapefile_output_dir_for_image)
         self.write_prj_file(
             geotiff_path=row["path"], geotiff_bytes=row["bytes"], prj_file_path=f"{shapefile_output_dir_for_image}.prj")
