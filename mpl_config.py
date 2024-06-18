@@ -11,6 +11,9 @@ Author  : Rajitha Udwalpola
 
 import os
 
+import gcsfs
+import google.auth
+
 from config import Config
 
 
@@ -29,12 +32,13 @@ class MPL_Config(object):
     def __init__(
         self,
         root_dir="",
+        adc_dir="",
         weight_file="hyp_best_train_weights_final.h5",
         logging=True,
         crop_size=200,
         num_gpus_per_core=1,
     ):
-        ## Do not change this section
+        # Do not change this section
         # Code depends on the relative locations indicated so should not change
         # Code expects some of the locations to be available when executing.
         # -----------------------------------------------------------------
@@ -48,6 +52,22 @@ class MPL_Config(object):
         self.TEMP_W_IMG_DIR = self.ROOT_DIR + r"/data/water_mask/temp"
         self.OUTPUT_IMAGE_DIR = self.ROOT_DIR + r"/data/output_img"
         self.WORKER_ROOT = self.ROOT_DIR + r"/data"
+        self.MODEL_DIR = self.ROOT_DIR + r"/local_dir/datasets/logs"
+        self.RAY_OUTPUT_SHAPEFILES_DIR = self.ROOT_DIR + r"/data/ray_output_shapefiles"
+
+        self.GCP_FILESYSTEM = None
+        if (self.ROOT_DIR.startswith(
+                "gcs://") or self.ROOT_DIR.startswith("gs://")):
+            if adc_dir:
+                print("You are using application default credentials to authenticate.")
+                creds, _ = google.auth.load_credentials_from_file(
+                    adc_dir, scopes=["https://www.googleapis.com/auth/cloud-platform"])
+                self.GCP_FILESYSTEM = gcsfs.GCSFileSystem(
+                    project="pdg-project-406720", token=creds)
+            else:
+                print("Please specify an application default credentials directory if you are running this code on your local computer.")
+                self.GCP_FILESYSTEM = gcsfs.GCSFileSystem(
+                    project="pdg-project-406720")
 
         # ADDED to include inference cleaning post-processing
         self.CLEAN_DATA_DIR = self.ROOT_DIR + r"/data/cln_data"
