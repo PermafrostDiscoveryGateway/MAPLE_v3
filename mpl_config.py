@@ -43,7 +43,7 @@ class MPL_Config(object):
         # Code expects some of the locations to be available when executing.
         # -----------------------------------------------------------------
         self.ROOT_DIR = root_dir if root_dir else os.getcwd()
-        self.INPUT_IMAGE_DIR = self.ROOT_DIR + r"/data/input_img"
+        self.INPUT_IMAGE_DIR = self.ROOT_DIR + r"/data/input_img_local"
         self.DIVIDED_IMAGE_DIR = self.ROOT_DIR + r"/data/divided_img"
         self.OUTPUT_SHP_DIR = self.ROOT_DIR + r"/data/output_shp"
         self.FINAL_SHP_DIR = self.ROOT_DIR + r"/data/final_shp"
