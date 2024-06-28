@@ -1,0 +1,5 @@
+working_dir: "."
+conda: "environment_maple.yml"
+config: {
+  setup_timeout_seconds: 1800
+}

@@ -1,0 +1,18 @@
+name: maple_py310_ray
+channels:
+  - defaults
+dependencies:
+  - gdal
+  - fiona
+  - pyshp
+  - scikit-image
+  - shapely
+  - pip=23.3.1
+  - pip:
+    - gcsfs
+    - google-auth
+    - tensorflow[and-cuda]==2.15.1
+    - opencv-python-headless
+    - pandas==2.1.4
+    - pyarrow
+    - tqdm

@@ -1,0 +1,11 @@
+gdal
+fiona
+pyshp
+scikit-image
+shapely
+gcsfs
+google-auth
+tensorflow[and-cuda]==2.15.1
+opencv-python-headless
+pandas==2.1.4
+pyarrow
