@@ -17,12 +17,12 @@ import argparse
 import os
 from typing import Any, Dict
 
-import tensorflow as tf
 import ray
+import tensorflow as tf
 
 from mpl_config import MPL_Config
 import ray_image_preprocessing
-import ray_infer_tiles as ray_inference
+import ray_infer_tiles
 import ray_write_shapefiles
 import ray_tile_and_stitch_util
 
@@ -91,6 +91,16 @@ if __name__ == "__main__":
         type=int
     )
 
+    parser.add_argument(
+        "--concurrency",
+        required=False,
+        default=2,
+        help="Number of ray workers for each map call. The concurrency parameter "
+        "should be tuned based on the resources available in the raycluster in "
+        "order to make the best use of the compute resources available. ",
+        type=int
+    )
+
     args = parser.parse_args()
 
     image_name = args.image
@@ -98,32 +108,26 @@ if __name__ == "__main__":
         args.root_dir, args.adc_dir, args.weight_file, num_gpus_per_core=args.gpus_per_core
     )
 
-    print("0. Load geotiffs into ray dataset")
-    dataset = create_geotiff_images_dataset(config).map(add_image_name)
-    print("Ray dataset schema:", dataset.schema())
-    print("1. Start calculating watermask")
-    dataset_with_water_mask = dataset.map(fn=ray_image_preprocessing.cal_water_mask,
-                                          fn_kwargs={"config": config})
-    print("Dataset schema with water mask: ", dataset_with_water_mask.schema())
-    print("2. Start tiling image")
-    image_tiles_dataset = dataset_with_water_mask.flat_map(
-        fn=ray_tile_and_stitch_util.tile_image, fn_kwargs={"config": config})
-    image_tiles_dataset = image_tiles_dataset.drop_columns(["mask"])
-    print("Dataset schema with image tiles: ", image_tiles_dataset.schema())
-    print("3. Start inferencing")
-    inferenced_dataset = image_tiles_dataset.map(
-        fn=ray_inference.MaskRCNNPredictor, fn_constructor_kwargs={"config": config}, concurrency=2)
-    print("Dataset schema with inferenced tiles: ", inferenced_dataset.schema())
-    print("4. Start stitching")
-    data_per_image = inferenced_dataset.groupby(
-        "image_name").map_groups(ray_tile_and_stitch_util.stitch_shapefile)
-    print("Dataset schema where each row is an image (result of a group by tile): ",
-          data_per_image.schema())
-    print("5. Write shapefiles")
-    shapefiles_dataset = data_per_image.map(
-        fn=ray_write_shapefiles.WriteShapefiles, fn_constructor_kwargs={"config": config}, concurrency=2)
-    print("Done writing shapefiles", shapefiles_dataset.schema())
-    
+    print("Ray pipeline starting")
+    ray_dataset = create_geotiff_images_dataset(config).map(
+        add_image_name, concurrency=args.concurrency).map(
+            fn=ray_image_preprocessing.cal_water_mask,
+            fn_kwargs={"config": config},
+            concurrency=args.concurrency).flat_map(
+                fn=ray_tile_and_stitch_util.tile_image,
+                fn_kwargs={"config": config},
+                concurrency=args.concurrency).drop_columns(["mask"]).map(
+                    fn=ray_infer_tiles.MaskRCNNPredictor,
+                    fn_constructor_kwargs={"config": config},
+                    concurrency=args.concurrency).groupby("image_name").map_groups(
+                        ray_tile_and_stitch_util.stitch_shapefile,
+                        concurrency=args.concurrency).map(
+                            fn=ray_write_shapefiles.WriteShapefiles,
+                            fn_constructor_kwargs={"config": config},
+                            concurrency=args.concurrency)
+
+    print("Ray pipeline finished: ", ray_dataset.schema())
+
 # Once you are done you can check the output on ArcGIS (win) or else you can check in QGIS (nx) Add the image and the
 # shp, shx, dbf as layers.
 # You can also look at compare_shapefile_features.py for how to compare the features in two shapefiles.

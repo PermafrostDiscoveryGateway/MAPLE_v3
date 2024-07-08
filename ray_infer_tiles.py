@@ -11,26 +11,18 @@ Author  : Rajitha Udwalpola
 
 from dataclasses import dataclass
 import os
+import random
 import tempfile
 from typing import Any, Dict, List
 
 import numpy as np
-import tensorflow as tf
 from skimage.measure import find_contours
+import ray
+import tensorflow as tf
 
 import model as modellib
 from mpl_config import MPL_Config, PolygonConfig
-
-
-@dataclass
-class ShapefileResult:
-    polygons: np.array
-    class_id: int
-
-
-@dataclass
-class ShapefileResults:
-    shapefile_results: List[ShapefileResult]
+from ray_tile_and_stitch_util import ShapefileResult, ShapefileResults
 
 
 class MaskRCNNPredictor:
@@ -40,9 +32,11 @@ class MaskRCNNPredictor:
     ):
         self.config = config
         # Used to identify a specific predictor when mulitple predictors are
-        # created to run inference in parallel. The counter is also used to
-        # know which GPU to use when multiple are available.
-        self.process_counter = 1  # TODO need to fix this process_counter
+        # created to run inference in parallel. 
+        # The process_counter could be assigned more optimally. We could have
+        # an accounting system so we optimize our gpus better.
+        ray_gpu_ids = ray.get_gpu_ids()
+        self.process_counter = random.choice(ray_gpu_ids) if ray_gpu_ids else 0
         self.use_gpu = config.NUM_GPUS_PER_CORE > 0
         self.device = "/gpu:%d" % self.process_counter if self.use_gpu else "/cpu:0"
 

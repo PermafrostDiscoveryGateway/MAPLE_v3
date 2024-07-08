@@ -9,16 +9,15 @@ import copy
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Dict, List
-import random
 
 import cv2
+import numpy as np
+import pandas as pd
 from osgeo import gdal, ogr
 from scipy.spatial import distance
 from shapely.geometry import Polygon
-import numpy as np
-import pandas as pd
 
-import gdal_virtual_file_system as gdal_vfs
+import gdal_virtual_file_path as gdal_vfp
 from mpl_config import MPL_Config
 
 
@@ -68,47 +67,42 @@ def tile_image(row: Dict[str, Any], config: MPL_Config) -> List[Dict[str, Any]]:
     config : Contains static configuration information regarding the workflow.
     """
 
-    # Create virtual file system file for image to use GDAL's file apis.
-    vfs = gdal_vfs.GDALVirtualFileSystem(
-        file_path=row["path"], file_bytes=row["bytes"])
-    virtual_image_file_path = vfs.create_virtual_file()
-    input_image_gtif = gdal.Open(virtual_image_file_path)
-    mask = row["mask"]
+    # Create virtual file path for image to use GDAL's file apis.
+    with gdal_vfp.GDALVirtualFilePath(
+        file_path=row["path"], file_bytes=row["bytes"]) as virtual_image_file_path:
+        with gdal.Open(virtual_image_file_path) as input_image_gtif:
+            mask = row["mask"]
 
-    # convert the original image into the geo cordinates for further processing using gdal
-    # https://gdal.org/tutorials/geotransforms_tut.html
-    # GT(0) x-coordinate of the upper-left corner of the upper-left pixel.
-    # GT(1) w-e pixel resolution / pixel width.
-    # GT(2) row rotation (typically zero).
-    # GT(3) y-coordinate of the upper-left corner of the upper-left pixel.
-    # GT(4) column rotation (typically zero).
-    # GT(5) n-s pixel resolution / pixel height (negative value for a north-up image).
+            # convert the original image into the geo cordinates for further processing using gdal
+            # https://gdal.org/tutorials/geotransforms_tut.html
+            # GT(0) x-coordinate of the upper-left corner of the upper-left pixel.
+            # GT(1) w-e pixel resolution / pixel width.
+            # GT(2) row rotation (typically zero).
+            # GT(3) y-coordinate of the upper-left corner of the upper-left pixel.
+            # GT(4) column rotation (typically zero).
+            # GT(5) n-s pixel resolution / pixel height (negative value for a north-up image).
 
-    # ---------------------- crop image from the water mask----------------------
-    # dot product of the mask and the orignal data before breaking it for processing
-    # Also band 2 3 and 4 are taken because the 4 bands cannot be processed by the NN learingin algo
-    # Need to make sure that the training bands are the same as the bands used for inferencing.
-    #
-    final_array_2 = input_image_gtif.GetRasterBand(2).ReadAsArray()
-    final_array_3 = input_image_gtif.GetRasterBand(3).ReadAsArray()
-    final_array_4 = input_image_gtif.GetRasterBand(4).ReadAsArray()
+            # ---------------------- crop image from the water mask----------------------
+            # dot product of the mask and the orignal data before breaking it for processing
+            # Also band 2 3 and 4 are taken because the 4 bands cannot be processed by the NN learingin algo
+            # Need to make sure that the training bands are the same as the bands used for inferencing.
+            #
+            final_array_2 = input_image_gtif.GetRasterBand(2).ReadAsArray()
+            final_array_3 = input_image_gtif.GetRasterBand(3).ReadAsArray()
+            final_array_4 = input_image_gtif.GetRasterBand(4).ReadAsArray()
 
-    final_array_2 = np.multiply(final_array_2, mask)
-    final_array_3 = np.multiply(final_array_3, mask)
-    final_array_4 = np.multiply(final_array_4, mask)
+            final_array_2 = np.multiply(final_array_2, mask)
+            final_array_3 = np.multiply(final_array_3, mask)
+            final_array_4 = np.multiply(final_array_4, mask)
 
-    # ulx, uly is the upper left corner
-    ulx, x_resolution, _, uly, _, y_resolution = input_image_gtif.GetGeoTransform()
+            # ulx, uly is the upper left corner
+            ulx, x_resolution, _, uly, _, y_resolution = input_image_gtif.GetGeoTransform()
 
-    # ---------------------- Divide image (tile) ----------------------
-    overlap_rate = 0.2
-    block_size = config.CROP_SIZE
-    ysize = input_image_gtif.RasterYSize
-    xsize = input_image_gtif.RasterXSize
-
-    # Close the file.
-    input_image_gtif = None
-    vfs.close_virtual_file()
+            # ---------------------- Divide image (tile) ----------------------
+            overlap_rate = 0.2
+            block_size = config.CROP_SIZE
+            ysize = input_image_gtif.RasterYSize
+            xsize = input_image_gtif.RasterXSize
 
     tile_count = 0
 
@@ -198,6 +192,11 @@ def stitch_shapefile(group: pd.DataFrame):
     ----------
     group: a pandas dataframe that has all of the shapefile information for each tile in the
             image.
+
+    Returns
+    -------
+    A single row from the group with the shapefile results for all the tiles
+    stored in the "image_shapefile_results" column.
     """
     image_shapefile_results = []
     temp_polygon_dict = defaultdict(dict)
@@ -219,6 +218,9 @@ def stitch_shapefile(group: pd.DataFrame):
         polygon_dict[k] = [poly_count, poly_count + v]
         poly_count += v
 
+    # Choosing the first row is arbitrary, we just want to gather the
+    # image metadata which is the same for all the rows, since we did
+    # a groupby by image.
     first_row = group.head(1)
     image_data_from_arbitrary_row = first_row["image_metadata"][0]
     size_i, size_j = image_data_from_arbitrary_row.len_y_list, image_data_from_arbitrary_row.len_x_list
@@ -317,12 +319,13 @@ def stitch_shapefile(group: pd.DataFrame):
     close_list = list(connected_components(close_list))
 
     # --------------- create a new shp file to store ---------------
-    # randomly pick one of many duplications
+    # Pick the first one if there's duplicates.
+    # This is arbirtary, choosing the first instead of a random one
+    # helps make the program more deterministic. 
     del_index_list = list()
     for close_possible in close_list:
         close_possible.sort()
         random_id = close_possible[0]
-        # random_id = random.choice(close_possible)
         close_possible.remove(random_id)
         del_index_list.extend(close_possible)
 

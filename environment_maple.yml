@@ -1,9 +1,15 @@
 name: maple_py310_ray
 channels:
+  # conda-forge may have more up to date packages than defaults,
+  # it might also have some packages that defaults doesn't have.
+  # Originally added it here because defaults didn't have newer
+  # versions of gdal.
+  - conda-forge
   - defaults
 dependencies:
   - python=3.10
-  - gdal
+  # gdal introduces with statements for file handling in 3.8
+  - gdal>=3.8
   - fiona
   - pyshp
   - scikit-image
@@ -13,6 +19,8 @@ dependencies:
     - gcsfs
     - google-auth
     - tensorflow[and-cuda]==2.15.1
+    # For ray pipeline monitoring
+    - tqdm
     - opencv-python
     - ray
     - pandas==2.1.4

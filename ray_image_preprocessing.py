@@ -17,7 +17,7 @@ from skimage import filters, io
 from skimage.morphology import disk
 
 from mpl_config import MPL_Config
-import gdal_virtual_file_system as gdal_vfs
+import gdal_virtual_file_path as gdal_vfp
 
 
 
@@ -39,7 +39,6 @@ def cal_water_mask(row: Dict[str, Any], config: MPL_Config) -> Dict[str, Any]:
 
     image_name = row["image_name"]
     worker_water_subroot = os.path.join(worker_water_root, image_name)
-    temp_water_subroot = os.path.join(temp_water_root, image_name)
     # Prepare to make directories to create the files
     try:
         shutil.rmtree(worker_water_subroot)
@@ -47,64 +46,54 @@ def cal_water_mask(row: Dict[str, Any], config: MPL_Config) -> Dict[str, Any]:
         print("directory deletion failed")
         pass
 
-    try:
-        shutil.rmtree(temp_water_subroot)
-    except:
-        print("directory deletion failed")
-        pass
-
     # check local storage for temporary storage
     Path(worker_water_subroot).mkdir(parents=True, exist_ok=True)
-    Path(temp_water_subroot).mkdir(parents=True, exist_ok=True)
 
     output_watermask = os.path.join(
         worker_water_subroot, r"%s_watermask.tif" % image_name
     )
-    output_tif_8b_file = os.path.join(
-        temp_water_subroot, r"%s_8bit.tif" % image_name
+    
+    # Create a gdal virtual file path so we don't have to create
+    # and store a temp file to disk to then read it right after
+    # storing it.
+    output_tif_8b_virtual_file = os.path.join(
+        "/vsimem/vsidir", r"%s_8bit.tif" % image_name
     )
-    nir_band = 3  # set number of NIR band
+    nir_band = 4  # set number of NIR band
 
     # %% Median and Otsu
     value = 5
 
-    # Create virtual file system file for image to use GDAL's file apis.
-    vfs = gdal_vfs.GDALVirtualFileSystem(
-        file_path=row["path"], file_bytes=row["bytes"])
-    virtual_file_path = vfs.create_virtual_file()
+    # Create virtual file path for image to use GDAL's file apis.
+    with gdal_vfp.GDALVirtualFilePath(
+        file_path=row["path"], file_bytes=row["bytes"]) as virtual_file_path:
+        # UPDATED CODE - amal 01/11/2023
+        # cmd line execution thrown exceptions unable to capture
+        # Using gdal to execute the gdal_Translate
+        # output file checked against the cmd line gdal_translate
+        gdal.UseExceptions()  # Enable errors
+        try:
+            gdal.Translate(
+                destName=output_tif_8b_virtual_file,
+                srcDS=virtual_file_path,
+                format="GTiff",
+                outputType=gdal.GDT_Byte,
+            )
+        except RuntimeError:
+            print("gdal Translate failed with", gdal.GetLastErrorMsg())
+            pass
 
-    # UPDATED CODE - amal 01/11/2023
-    # cmd line execution thrown exceptions unable to capture
-    # Using gdal to execute the gdal_Translate
-    # output file checked against the cmd line gdal_translate
-    gdal.UseExceptions()  # Enable errors
-    try:
-        gdal.Translate(
-            destName=output_tif_8b_file,
-            srcDS=virtual_file_path,
-            format="GTiff",
-            outputType=gdal.GDT_Byte,
-        )
-    except RuntimeError:
-        print("gdal Translate failed with", gdal.GetLastErrorMsg())
-        pass
+        with gdal.Open(output_tif_8b_virtual_file) as output_tif_8b:
+            nir = np.array(output_tif_8b.GetRasterBand(nir_band).ReadAsArray())
+            bilat_img = filters.rank.median(nir, disk(value))
+            gdal.Unlink(output_tif_8b_virtual_file)
 
-    image = io.imread(
-        output_tif_8b_file
-    )  # image[rows, columns, dimensions]-> image[:,:,3] is near Infrared
-    nir = image[:, :, nir_band]
+        with gdal.Open(virtual_file_path) as gtif:
+            geotransform = gtif.GetGeoTransform()
+            sourceSR = gtif.GetProjection()
 
-    bilat_img = filters.rank.median(nir, disk(value))
-
-    gtif = gdal.Open(virtual_file_path)
-    geotransform = gtif.GetGeoTransform()
-    sourceSR = gtif.GetProjection()
-    # Close the file.
-    gtif = None
-    vfs.close_virtual_file()
-
-    x = np.shape(image)[1]
-    y = np.shape(image)[0]
+    x = np.shape(nir)[1]
+    y = np.shape(nir)[0]
 
     # Normalize and blur before thresholding. Usually instead of normalizing
     # a rgb to greyscale transformation is applied. In this case, we are already
@@ -131,6 +120,6 @@ def cal_water_mask(row: Dict[str, Any], config: MPL_Config) -> Dict[str, Any]:
     dst_ds.SetGeoTransform(geotransform)
     dst_ds.SetProjection(sourceSR)
     dst_ds.FlushCache()
-    dst_ds = None
+    del dst_ds
     row["mask"] = mask
     return row
