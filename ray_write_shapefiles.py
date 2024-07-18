@@ -12,19 +12,6 @@ import gdal_virtual_file_path as gdal_vfp
 from mpl_config import MPL_Config
 
 
-def delete_and_create_dir(dir: str):
-    try:
-        shutil.rmtree(dir)
-    except Exception as e:
-        print(f"Error deleting directory {dir}: {e}")
-
-    try:
-        os.makedirs(dir, exist_ok=True)
-        print(f"Created directory {dir}")
-    except Exception as e:
-        print(f"Error creating directory {dir}: {e}")
-
-
 class WriteShapefiles:
     def __init__(
         self,
@@ -32,8 +19,6 @@ class WriteShapefiles:
     ):
         self.config = config
         self.current_timestamp_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        if self.config.GCP_FILESYSTEM is None:
-            delete_and_create_dir(self.config.RAY_OUTPUT_SHAPEFILES_DIR)
 
     def __get_coordinate_system_info(self, file_path: str, file_bytes: bytes):
         try:

@@ -88,6 +88,7 @@ def create_maple_dir_structure():
     # ├── output_img
     # ├── output_shp
     # ├── projected_shp
+    # ├── ray_output_shapefiles
     # └── water_mask
     #     └── temp
     config = MPL_Config()
@@ -101,6 +102,7 @@ def create_maple_dir_structure():
     create_dir_path(config.OUTPUT_IMAGE_DIR)
     create_dir_path(os.path.join(config.WORKER_ROOT, "neighbors/"))
     create_dir_path(os.path.join(config.WORKER_ROOT, "projected_shp/"))
+    create_dir_path(config.RAY_OUTPUT_SHAPEFILES_DIR)
     create_dir_path(config.CLEAN_DATA_DIR)
 
 

@@ -38,6 +38,16 @@ def add_image_name(row: Dict[str, Any]) -> Dict[str, Any]:
     return row
 
 
+def create_directory_if_not_exists(directory_path: str):
+    """Creates a directory with the specified path if it doesn't already exist."""
+
+    if not os.path.exists(directory_path):
+        os.makedirs(directory_path)
+        print(f"Directory created: {directory_path}")
+    else:
+        print(f"Directory already exists: {directory_path}") 
+
+
 if __name__ == "__main__":
     tf.compat.v1.disable_eager_execution()
     parser = argparse.ArgumentParser(
@@ -107,26 +117,48 @@ if __name__ == "__main__":
     config = MPL_Config(
         args.root_dir, args.adc_dir, args.weight_file, num_gpus_per_core=args.gpus_per_core
     )
+    concurrency = args.concurrency
 
-    print("Ray pipeline starting")
-    ray_dataset = create_geotiff_images_dataset(config).map(
-        add_image_name, concurrency=args.concurrency).map(
-            fn=ray_image_preprocessing.cal_water_mask,
-            fn_kwargs={"config": config},
-            concurrency=args.concurrency).flat_map(
-                fn=ray_tile_and_stitch_util.tile_image,
-                fn_kwargs={"config": config},
-                concurrency=args.concurrency).drop_columns(["mask"]).map(
-                    fn=ray_infer_tiles.MaskRCNNPredictor,
-                    fn_constructor_kwargs={"config": config},
-                    concurrency=args.concurrency).groupby("image_name").map_groups(
-                        ray_tile_and_stitch_util.stitch_shapefile,
-                        concurrency=args.concurrency).map(
-                            fn=ray_write_shapefiles.WriteShapefiles,
-                            fn_constructor_kwargs={"config": config},
-                            concurrency=args.concurrency)
+    print("Starting MAPLE Ray pipeline...")
+    print("""This pipeline will:
+          - load geotiffs into ray dataset
+          - calculate a watermask for each image
+          - tile each watermasked image
+          - perform inference on each tile
+          - stitch the tile inference results to get the inference results for each image
+          - write the inference results for each image to shapefiles 
+          """)
 
-    print("Ray pipeline finished: ", ray_dataset.schema())
+    # 0. Load geotiffs into ray dataset
+    dataset = create_geotiff_images_dataset(config).map(add_image_name, concurrency=concurrency)
+
+    # 1. Start calculating watermask
+    dataset_with_water_mask = dataset.map(fn=ray_image_preprocessing.cal_water_mask,
+                                          fn_kwargs={"config": config}, concurrency=args.concurrency)
+
+    # 2. Start tiling image
+    image_tiles_dataset = dataset_with_water_mask.flat_map(
+        fn=ray_tile_and_stitch_util.tile_image, fn_kwargs={"config": config}, concurrency=args.concurrency)
+    image_tiles_dataset = image_tiles_dataset.drop_columns(["mask"])
+
+    # 3. Start inferencing
+    inferenced_dataset = image_tiles_dataset.map(
+        fn=ray_infer_tiles.MaskRCNNPredictor, fn_constructor_kwargs={"config": config}, concurrency=concurrency)
+
+    # 4. Start stitching
+    data_per_image = inferenced_dataset.groupby(
+        "image_name").map_groups(ray_tile_and_stitch_util.stitch_shapefile, concurrency=args.concurrency)
+
+    # 5. Write shapefiles
+    # Create the output directory if it doesn't exist.
+    # TODO - do something similar for GCP directories, we have the code to create local
+    # dirs if they don't exist (ex. mpl_workflow_create_dir_struct.py), it'd be great to
+    # add support for creating GCP directories if they don't exist.
+    if config.GCP_FILESYSTEM is None:
+            create_directory_if_not_exists(config.RAY_OUTPUT_SHAPEFILES_DIR)
+    shapefiles_dataset = data_per_image.map(
+        fn=ray_write_shapefiles.WriteShapefiles, fn_constructor_kwargs={"config": config}, concurrency=concurrency)
+    print("MAPLE Ray pipeline finished, done writing shapefiles", shapefiles_dataset.schema())
 
 # Once you are done you can check the output on ArcGIS (win) or else you can check in QGIS (nx) Add the image and the
 # shp, shx, dbf as layers.
