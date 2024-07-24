@@ -2,6 +2,7 @@ name: maple_py310_ray
 channels:
   - defaults
 dependencies:
+  - python=3.10
   - gdal
   - fiona
   - pyshp
