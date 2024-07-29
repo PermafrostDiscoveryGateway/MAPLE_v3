@@ -1,4 +1,4 @@
-# MAPLE
+ # MAPLE
 
 ## Introduction
 Increasing availability of high spatial resolution remote sensing data, particularly the sub-meter imagery acquired by commercial satellite sensors, provide unprecedented opportunities to map, monitor, and document permafrost features and their change over time. High performance image analysis algorithms/workflows/pipelines centered on AI are indeed required to perform regional to pan-Arctic scale mappings from big image data sets that are freely available to the NSF-funded Arctic researcher community.
@@ -69,7 +69,7 @@ For the basic vanilla configuration you only need a list of input tiff files in 
 
 <h2 id="weight-file"> Weight File </h2>
 
-This is the [trainded weight file](https://uconn-my.sharepoint.com/:u:/g/personal/amal_perera_uconn_edu/EQDp2IqNtMpS0Ri7t-A_gzkBHkmA5n8Vh8flLZxcD2TfUw?e=EcrPSX) that is required for the model to do the inferencing
+This is the [trainded weight file](https://uconn-my.sharepoint.com/:u:/g/personal/amal_perera_uconn_edu/EQDp2IqNtMpS0Ri7t-A_gzkBHkmA5n8Vh8flLZxcD2TfUw?e=EcrPSX) that is required for the model to do the inferencing.
 
 ## Running MAPLE using Ray.io
 In [PR #19](https://github.com/PermafrostDiscoveryGateway/MAPLE_v3/pull/19), we introduced a new MAPLE implementation that supports running MAPLE using ray.io.
