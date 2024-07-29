@@ -70,3 +70,12 @@ For the basic vanilla configuration you only need a list of input tiff files in 
 <h2 id="weight-file"> Weight File </h2>
 
 This is the [trainded weight file](https://drive.google.com/file/d/1R51e8YqTKvc_5lq7wSKEbu1G1nyV1-YZ/view?usp=drive_link) that is required for the model to do the inferencing
+
+<h2> Running MAPLE using Ray.io </h2>
+In [PR #19](https://github.com/PermafrostDiscoveryGateway/MAPLE_v3/pull/19), we introduced a new MAPLE implementation that supports running MAPLE using ray.io.
+
+See [this comment](https://github.com/PermafrostDiscoveryGateway/MAPLE_v3/pull/19#issue-2241066807) for steps on how to run the MAPLE pipeline with your local file system.
+
+See [this comment](https://github.com/PermafrostDiscoveryGateway/MAPLE_v3/pull/19#issuecomment-2116407584) for steps on how to run the MAPLE pipeline with google cloud storage buckets.
+
+Refer to [this document](https://docs.google.com/document/d/14kru_GPsakDJFX-On1Db_NLClEFvB6oLFMQFFkNQqsA/edit?usp=sharing) for more information on ray. The [Ray Data](https://docs.google.com/document/d/14kru_GPsakDJFX-On1Db_NLClEFvB6oLFMQFFkNQqsA/edit#heading=h.6lw6d49z80gv) and [Ray Data Case Study: MAPLE](https://docs.google.com/document/d/14kru_GPsakDJFX-On1Db_NLClEFvB6oLFMQFFkNQqsA/edit#heading=h.otzb3b7a6vhk) are particularly helpful.

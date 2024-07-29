@@ -158,7 +158,9 @@ if __name__ == "__main__":
             create_directory_if_not_exists(config.RAY_OUTPUT_SHAPEFILES_DIR)
     shapefiles_dataset = data_per_image.map(
         fn=ray_write_shapefiles.WriteShapefiles, fn_constructor_kwargs={"config": config}, concurrency=concurrency)
-    print("MAPLE Ray pipeline finished, done writing shapefiles", shapefiles_dataset.schema())
+    # Materialize dataset so that the pipeline steps are executed. 
+    materialized_dataset = shapefiles_dataset.materialize()
+    print("MAPLE Ray pipeline finished, done writing shapefiles", materialized_dataset.schema())
 
 # Once you are done you can check the output on ArcGIS (win) or else you can check in QGIS (nx) Add the image and the
 # shp, shx, dbf as layers.
