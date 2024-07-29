@@ -69,4 +69,13 @@ For the basic vanilla configuration you only need a list of input tiff files in 
 
 <h2 id="weight-file"> Weight File </h2>
 
-This is the [trainded weight file](https://uconn-my.sharepoint.com/:u:/g/personal/amal_perera_uconn_edu/EQDp2IqNtMpS0Ri7t-A_gzkBHkmA5n8Vh8flLZxcD2TfUw?e=EcrPSX) that is required for the model to do the inferencing
+This is the [trainded weight file](https://uconn-my.sharepoint.com/:u:/g/personal/amal_perera_uconn_edu/EQDp2IqNtMpS0Ri7t-A_gzkBHkmA5n8Vh8flLZxcD2TfUw?e=EcrPSX) that is required for the model to do the inferencing.
+
+## Running MAPLE using Ray.io
+In [PR #19](https://github.com/PermafrostDiscoveryGateway/MAPLE_v3/pull/19), we introduced a new MAPLE implementation that supports running MAPLE using ray.io.
+
+See [this comment](https://github.com/PermafrostDiscoveryGateway/MAPLE_v3/pull/19#issue-2241066807) for steps on how to run the MAPLE pipeline with your local file system.
+
+See [this comment](https://github.com/PermafrostDiscoveryGateway/MAPLE_v3/pull/19#issuecomment-2116407584) for steps on how to run the MAPLE pipeline with google cloud storage buckets.
+
+Refer to [this document](https://docs.google.com/document/d/14kru_GPsakDJFX-On1Db_NLClEFvB6oLFMQFFkNQqsA/edit?usp=sharing) for more information on ray. The [Ray Data](https://docs.google.com/document/d/14kru_GPsakDJFX-On1Db_NLClEFvB6oLFMQFFkNQqsA/edit#heading=h.6lw6d49z80gv) and [Ray Data Case Study: MAPLE](https://docs.google.com/document/d/14kru_GPsakDJFX-On1Db_NLClEFvB6oLFMQFFkNQqsA/edit#heading=h.otzb3b7a6vhk) are particularly helpful.
