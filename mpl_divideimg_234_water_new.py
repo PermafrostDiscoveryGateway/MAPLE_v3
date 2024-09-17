@@ -11,6 +11,7 @@ import cv2
 import h5py
 import numpy as np
 import os
+from pathlib import Path
 
 from mpl_config import MPL_Config
 from osgeo import gdal
@@ -176,6 +177,9 @@ def divide_image(
     values = np.array([x_resolution, y_resolution, image_count])
     f2.create_dataset("values", data=values)
     import pickle
+
+    path_to_neighbors = os.path.join(worker_root, "neighbors")
+    Path(path_to_neighbors).mkdir(parents=True, exist_ok=True)
 
     db_file_path = os.path.join(worker_root, "neighbors/%s_ij_dict.pkl" % new_file_name)
     dbfile = open(db_file_path, "wb")
