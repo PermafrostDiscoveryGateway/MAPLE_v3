@@ -217,8 +217,6 @@ def stitch_shapefile(group: pd.DataFrame):
         image_tile = row["image_tile"]
         tile_num = row["tile_num"]
         temp_polygon_dict[tile_num] = row["num_polygons_in_tile"]
-        # id_i = image_tile.tile_metadata.id_i
-        # id_j = image_tile.tile_metadata.id_j
         id_i = image_tile["tile_metadata"]["id_i"]
         id_j = image_tile["tile_metadata"]["id_j"]
         dict_ij[id_i][id_j] = tile_num
