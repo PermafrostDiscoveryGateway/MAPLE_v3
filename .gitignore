@@ -71,3 +71,5 @@ venv.bak/
 
 # Cython debug symbols
 cython_debug/
+.idea
+*.h5

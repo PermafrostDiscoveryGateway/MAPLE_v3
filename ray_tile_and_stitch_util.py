@@ -159,16 +159,25 @@ def tile_image(row: Dict[str, Any], config: MPL_Config) -> List[Dict[str, Any]]:
             ul_row_divided_img = uly + i * y_resolution
             ul_col_divided_img = ulx + j * x_resolution
 
-            tile_metadata = ImageTileMetadata(
-                upper_left_row=ul_row_divided_img, upper_left_col=ul_col_divided_img, tile_num=tile_count, id_i=id_i, id_j=id_j)
-            image_tile = ImageTile(
-                tile_values=final_image, tile_metadata=tile_metadata)
+            tile_metadata = {
+                "upper_left_row": ul_row_divided_img,
+                "upper_left_col": ul_col_divided_img,
+                "tile_num": tile_count,
+                "id_i": id_i,
+                "id_j": id_j
+            }
+            image_tile = {"tile_values": final_image.tolist(), "tile_metadata": tile_metadata}
             tiles.append(image_tile)
             tile_count += 1
 
     # --------------- Store all the title as an object file
-    image_metadata = ImageMetadata(
-        len_x_list=len(x_list), len_y_list=len(y_list), x_resolution=x_resolution, y_resolution=y_resolution)
+    # for serialization purpose
+    image_metadata = {
+        "len_x_list": len(x_list),
+        "len_y_list": len(y_list),
+        "x_resolution": x_resolution,
+        "y_resolution": y_resolution
+    }
     row["image_metadata"] = image_metadata
     new_rows = []
     tile_count = 0
@@ -208,8 +217,10 @@ def stitch_shapefile(group: pd.DataFrame):
         image_tile = row["image_tile"]
         tile_num = row["tile_num"]
         temp_polygon_dict[tile_num] = row["num_polygons_in_tile"]
-        id_i = image_tile.tile_metadata.id_i
-        id_j = image_tile.tile_metadata.id_j
+        # id_i = image_tile.tile_metadata.id_i
+        # id_j = image_tile.tile_metadata.id_j
+        id_i = image_tile["tile_metadata"]["id_i"]
+        id_j = image_tile["tile_metadata"]["id_j"]
         dict_ij[id_i][id_j] = tile_num
 
     polygon_dict = defaultdict(dict)

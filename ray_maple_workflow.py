@@ -26,6 +26,21 @@ import ray_infer_tiles
 import ray_write_shapefiles
 import ray_tile_and_stitch_util
 
+# Start Ray with proper resource allocation
+ray.init(ignore_reinit_error=True)
+
+# Ensure TensorFlow uses GPU if available
+gpu_devices = tf.config.list_physical_devices('GPU')
+if gpu_devices:
+    try:
+        tf.config.experimental.set_memory_growth(gpu_devices[0], True)
+        tf.config.set_visible_devices(gpu_devices[0], 'GPU')
+        print("Using GPU:", gpu_devices[0])
+    except Exception as e:
+        print("Failed to set GPU:", e)
+else:
+    print("No GPU found. Running on CPU.")
+
 
 def create_geotiff_images_dataset(config: MPL_Config) -> ray.data.Dataset:
     if config.GCP_FILESYSTEM is not None:
@@ -49,6 +64,7 @@ def create_directory_if_not_exists(directory_path: str):
 
 
 if __name__ == "__main__":
+
     tf.compat.v1.disable_eager_execution()
     parser = argparse.ArgumentParser(
         description="Extract IWPs from satellite image scenes using MAPLE."

@@ -62,12 +62,12 @@ class MaskRCNNPredictor:
 
         # get the upper left x y of the image
         image_tile = row["image_tile"]
-        ul_row_divided_img = image_tile.tile_metadata.upper_left_row
-        ul_col_divided_img = image_tile.tile_metadata.upper_left_col
-        image_tile_values = image_tile.tile_values
+        ul_row_divided_img = image_tile["tile_metadata"]["upper_left_row"]
+        ul_col_divided_img = image_tile["tile_metadata"]["upper_left_col"]
+        image_tile_values = np.array(image_tile["tile_values"])
         image_metadata = row["image_metadata"]
-        x_resolution = image_metadata.x_resolution
-        y_resolution = image_metadata.y_resolution
+        x_resolution = image_metadata["x_resolution"]
+        y_resolution = image_metadata["y_resolution"]
 
         results = self.model.detect([image_tile_values], verbose=False)
 
