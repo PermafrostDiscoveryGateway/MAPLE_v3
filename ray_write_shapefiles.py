@@ -92,7 +92,7 @@ class WriteShapefiles:
         writer.field("Width", "N", decimal=3)
         image_name = row["image_name"]
         for shapefile_result in row["image_shapefile_results"]["shapefile_results"]:
-            polygons = shapefile_result.polygons
+            polygons = shapefile_result["polygons"]
             writer.poly([polygons.tolist()])
 
             poly = Polygon(polygons)
@@ -106,7 +106,7 @@ class WriteShapefiles:
             length = max(edge_length)
             width = min(edge_length)
 
-            writer.record(Class=shapefile_result.class_id, Sensor=image_name[0:4], Date=image_name[5:13],
+            writer.record(Class=shapefile_result["class_id"], Sensor=image_name[0:4], Date=image_name[5:13],
                      Time=image_name[13:19], CatalogID=image_name[20:36], Area=poly.area,
                      CentroidX=centroid.x, CentroidY=centroid.y, Perimeter=poly.length, Length=length, Width=width)
 

@@ -92,14 +92,13 @@ class MaskRCNNPredictor:
                     )
                     # swap two cols
                     contours.T[[0, 1]] = contours.T[[1, 0]]
-                    shapefile_results.append(
-                        ShapefileResult(polygons=contours.tolist(), class_id=class_id)  # Convert NumPy array to list
-                    )
+
+                    shapefile_results.append({"polygon": contours.tolist(), "class_id": class_id})
 
                 except:
                     contours = []
                     pass
 
         row["num_polygons_in_tile"] = r["masks"].shape[2]
-        row["tile_shapefile_results"] = ShapefileResults(shapefile_results)
+        row["tile_shapefile_results"] = {"shapefile_results": shapefile_results}
         return row

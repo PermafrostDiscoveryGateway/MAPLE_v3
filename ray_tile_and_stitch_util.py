@@ -213,7 +213,7 @@ def stitch_shapefile(group: pd.DataFrame):
     sorted_group = group.sort_values(by="tile_num")
     for index, row in sorted_group.iterrows():
         image_shapefile_results.extend(
-            row["tile_shapefile_results"].shapefile_results)
+            row["tile_shapefile_results"]["shapefile_results"])
         image_tile = row["image_tile"]
         tile_num = row["tile_num"]
         temp_polygon_dict[tile_num] = row["num_polygons_in_tile"]
@@ -239,7 +239,7 @@ def stitch_shapefile(group: pd.DataFrame):
     # create a count number for final checking
     for shapefile_result in image_shapefile_results:
         # create a polygon in shapely
-        ref_polygon = Polygon(shapefile_result.polygons)
+        ref_polygon = Polygon(shapefile_result["polygons"])
         # parse wkt return
         geom = ogr.CreateGeometryFromWkt(ref_polygon.centroid.wkt)
         centroid_x, centroid_y = geom.GetPoint(0)[0], geom.GetPoint(0)[1]
