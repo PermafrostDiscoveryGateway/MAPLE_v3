@@ -25,6 +25,7 @@ import ray_image_preprocessing
 import ray_infer_tiles
 import ray_write_shapefiles
 import ray_tile_and_stitch_util
+import numpy as np
 
 # Start Ray with proper resource allocation
 ray.init(ignore_reinit_error=True)
@@ -60,7 +61,7 @@ def create_directory_if_not_exists(directory_path: str):
         os.makedirs(directory_path)
         print(f"Directory created: {directory_path}")
     else:
-        print(f"Directory already exists: {directory_path}") 
+        print(f"Directory already exists: {directory_path}")
 
 
 if __name__ == "__main__":
@@ -171,9 +172,10 @@ if __name__ == "__main__":
     # dirs if they don't exist (ex. mpl_workflow_create_dir_struct.py), it'd be great to
     # add support for creating GCP directories if they don't exist.
     if config.GCP_FILESYSTEM is None:
-            create_directory_if_not_exists(config.RAY_OUTPUT_SHAPEFILES_DIR)
+        create_directory_if_not_exists(config.RAY_OUTPUT_SHAPEFILES_DIR)
     shapefiles_dataset = data_per_image.map(
         fn=ray_write_shapefiles.WriteShapefiles, fn_constructor_kwargs={"config": config}, concurrency=concurrency)
+
     # Materialize dataset so that the pipeline steps are executed. 
     materialized_dataset = shapefiles_dataset.materialize()
     print("MAPLE Ray pipeline finished, done writing shapefiles", materialized_dataset.schema())

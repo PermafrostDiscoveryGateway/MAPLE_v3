@@ -92,8 +92,10 @@ class MaskRCNNPredictor:
                     )
                     # swap two cols
                     contours.T[[0, 1]] = contours.T[[1, 0]]
-                    shapefile_results.append(ShapefileResult(
-                        polygons=contours, class_id=class_id))
+                    shapefile_results.append(
+                        ShapefileResult(polygons=contours.tolist(), class_id=class_id)  # Convert NumPy array to list
+                    )
+
                 except:
                     contours = []
                     pass

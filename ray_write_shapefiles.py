@@ -91,7 +91,7 @@ class WriteShapefiles:
         writer.field("Length", "N", decimal=3)
         writer.field("Width", "N", decimal=3)
         image_name = row["image_name"]
-        for shapefile_result in row["image_shapefile_results"].shapefile_results:
+        for shapefile_result in row["image_shapefile_results"]["shapefile_results"]:
             polygons = shapefile_result.polygons
             writer.poly([polygons.tolist()])
 
