@@ -1,15 +1,25 @@
-name: maple_py310
+name: maple_py310_ray_osx-64_v3
 channels:
   - defaults
   - apple
+  - conda-forge
 dependencies:
   - python=3.10
-  - gdal
+  # gdal introduces with statements for file handling in 3.8
+  - gdal>=3.8
+  - fiona
   - pyshp
   - scikit-image
   - shapely
-  - tensorflow-deps
+  - pip=23.3.1
   - pip:
-    - opencv-python
     - tensorflow-macos
-    - tensorflow-metal
+    - gcsfs
+    - google-auth
+    # For ray pipeline monitoring
+    - tqdm
+    - opencv-python
+    # pin ray version to avoid "pyarrow.lib.ArrowInvalid: offset overflow while concatenating arrays error"
+    - ray==2.23.0
+    - pandas==2.1.4
+    - pyarrow
