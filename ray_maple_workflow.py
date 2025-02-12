@@ -25,12 +25,39 @@ import ray_image_preprocessing
 import ray_infer_tiles
 import ray_write_shapefiles
 import ray_tile_and_stitch_util
+from functools import reduce
 
 
 def create_geotiff_images_dataset(config: MPL_Config) -> ray.data.Dataset:
-    if config.GCP_FILESYSTEM is not None:
-        return ray.data.read_binary_files(config.INPUT_IMAGE_DIR + "/", filesystem=config.GCP_FILESYSTEM, include_paths=True)
-    return ray.data.read_binary_files(config.INPUT_IMAGE_DIR, include_paths=True)
+    # Target block size: 256MB to stay well below the 2GB Arrow limit
+    target_block_size = 256 * 1024 * 1024
+
+    output_dir = os.path.join(config.INPUT_IMAGE_DIR, "ray_output_shapefiles")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    else:
+        print(f"Directory already exists: {output_dir}")
+
+    # Read files individually to prevent large file issues
+    file_paths = [os.path.join(config.INPUT_IMAGE_DIR, f) for f in os.listdir(config.INPUT_IMAGE_DIR) if f.endswith(".tif")]
+
+    datasets = []
+    for file_path in file_paths:
+        dataset = ray.data.read_binary_files(
+            [file_path],  # Process one file at a time
+            include_paths=True
+        )
+        datasets.append(dataset)
+
+    # Concatenate datasets and repartition based on total size
+    combined_dataset = reduce(lambda d1, d2: d1.union(d2), datasets)
+    total_size = combined_dataset.size_bytes()
+    num_blocks = max(2, total_size // target_block_size)
+
+    print(f"Repartitioning dataset to {num_blocks} blocks (Estimated size: {total_size / (1024 ** 2):.2f} MB)")
+
+    return combined_dataset.repartition(num_blocks)
+
 
 
 def add_image_name(row: Dict[str, Any]) -> Dict[str, Any]:
