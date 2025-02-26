@@ -29,35 +29,15 @@ from functools import reduce
 
 
 def create_geotiff_images_dataset(config: MPL_Config) -> ray.data.Dataset:
-    # Target block size: 256MB to stay well below the 2GB Arrow limit
-    target_block_size = 256 * 1024 * 1024
-
-    output_dir = os.path.join(config.INPUT_IMAGE_DIR, "ray_output_shapefiles")
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    else:
-        print(f"Directory already exists: {output_dir}")
-
     # Read files individually to prevent large file issues
     file_paths = [os.path.join(config.INPUT_IMAGE_DIR, f) for f in os.listdir(config.INPUT_IMAGE_DIR) if f.endswith(".tif")]
 
-    datasets = []
-    for file_path in file_paths:
-        dataset = ray.data.read_binary_files(
-            [file_path],  # Process one file at a time
-            include_paths=True
-        )
-        datasets.append(dataset)
+    datasets = [ray.data.read_binary_files([file_path], include_paths=True) for file_path in file_paths]
 
-    # Concatenate datasets and repartition based on total size
+    # Concatenate datasets
     combined_dataset = reduce(lambda d1, d2: d1.union(d2), datasets)
-    total_size = combined_dataset.size_bytes()
-    num_blocks = max(2, total_size // target_block_size)
 
-    print(f"Repartitioning dataset to {num_blocks} blocks (Estimated size: {total_size / (1024 ** 2):.2f} MB)")
-
-    return combined_dataset.repartition(num_blocks)
-
+    return combined_dataset
 
 
 def add_image_name(row: Dict[str, Any]) -> Dict[str, Any]:
@@ -144,7 +124,6 @@ if __name__ == "__main__":
     config = MPL_Config(
         args.root_dir, args.adc_dir, args.weight_file, num_gpus_per_core=args.gpus_per_core
     )
-    concurrency = args.concurrency
 
     print("Starting MAPLE Ray pipeline...")
     print("""This pipeline will:
@@ -157,7 +136,7 @@ if __name__ == "__main__":
           """)
 
     # 0. Load geotiffs into ray dataset
-    dataset = create_geotiff_images_dataset(config).map(add_image_name, concurrency=concurrency)
+    dataset = create_geotiff_images_dataset(config).map(add_image_name, concurrency=args.concurrency)
 
     # 1. Start calculating watermask
     dataset_with_water_mask = dataset.map(fn=ray_image_preprocessing.cal_water_mask,
@@ -170,7 +149,7 @@ if __name__ == "__main__":
 
     # 3. Start inferencing
     inferenced_dataset = image_tiles_dataset.map(
-        fn=ray_infer_tiles.MaskRCNNPredictor, fn_constructor_kwargs={"config": config}, concurrency=concurrency)
+        fn=ray_infer_tiles.MaskRCNNPredictor, fn_constructor_kwargs={"config": config}, concurrency=args.concurrency)
 
     # 4. Start stitching
     data_per_image = inferenced_dataset.groupby(
@@ -184,7 +163,7 @@ if __name__ == "__main__":
     if config.GCP_FILESYSTEM is None:
             create_directory_if_not_exists(config.RAY_OUTPUT_SHAPEFILES_DIR)
     shapefiles_dataset = data_per_image.map(
-        fn=ray_write_shapefiles.WriteShapefiles, fn_constructor_kwargs={"config": config}, concurrency=concurrency)
+        fn=ray_write_shapefiles.WriteShapefiles, fn_constructor_kwargs={"config": config}, concurrency=args.concurrency)
     # Materialize dataset so that the pipeline steps are executed. 
     materialized_dataset = shapefiles_dataset.materialize()
     print("MAPLE Ray pipeline finished, done writing shapefiles", materialized_dataset.schema())
