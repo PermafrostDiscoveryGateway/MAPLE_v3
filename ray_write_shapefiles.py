@@ -20,23 +20,50 @@ class WriteShapefiles:
         self.config = config
         self.current_timestamp_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    def __get_coordinate_system_info(self, file_path: str, file_bytes: bytes):
-        try:
-            # Open the dataset
-            # Create virtual file path for image to use GDAL's file apis.
-            spatial_ref = osr.SpatialReference()
-            with gdal_vfp.GDALVirtualFilePath(
-                file_path, file_bytes) as virtual_file_path:
-                with gdal.Open(virtual_file_path) as dataset:
-                    # Check if the dataset is valid
-                    if dataset is None:
-                        print("gdal error: ", gdal.GetLastErrorMsg())
-                        raise Exception("Error: Unable to open the dataset")
+    # def __get_coordinate_system_info(self, file_path: str):
+    #     try:
+    #         # Open the dataset
+    #         # Create virtual file path for image to use GDAL's file apis.
+    #         spatial_ref = osr.SpatialReference()
+    #         with gdal_vfp.GDALVirtualFilePath(
+    #             file_path, file_bytes) as virtual_file_path:
+    #             with gdal.Open(virtual_file_path) as dataset:
+    #                 # Check if the dataset is valid
+    #                 if dataset is None:
+    #                     print("gdal error: ", gdal.GetLastErrorMsg())
+    #                     raise Exception("Error: Unable to open the dataset")
+    #
+    #                 # Try to import the coordinate system from WKT
+    #                 if spatial_ref.ImportFromWkt(dataset.GetProjection()) != gdal.CE_None:
+    #                     raise Exception(
+    #                         "Error: Unable to import coordinate system from WKT.")
+    #
+    #         # Check if the spatial reference is valid
+    #         if spatial_ref.Validate() != gdal.CE_None:
+    #             raise Exception("Error: Invalid spatial reference.")
+    #
+    #         # Export the spatial reference to WKT
+    #         return spatial_ref.ExportToWkt()
+    #
+    #     except Exception as e:
+    #         print(f"Error when getting the coordinate system info: {e}")
+    #         return None
 
-                    # Try to import the coordinate system from WKT
-                    if spatial_ref.ImportFromWkt(dataset.GetProjection()) != gdal.CE_None:
-                        raise Exception(
-                            "Error: Unable to import coordinate system from WKT.")
+    def __get_coordinate_system_info(self, file_path: str):
+        try:
+            # Open the dataset directly from the file path
+            spatial_ref = osr.SpatialReference()
+            dataset = gdal.Open(file_path)
+
+            # Check if the dataset is valid
+            if dataset is None:
+                print("GDAL error:", gdal.GetLastErrorMsg())
+                raise Exception("Error: Unable to open the dataset")
+
+            # Try to import the coordinate system from WKT
+            projection_wkt = dataset.GetProjection()
+            if spatial_ref.ImportFromWkt(projection_wkt) != gdal.CE_None:
+                raise Exception("Error: Unable to import coordinate system from WKT.")
 
             # Check if the spatial reference is valid
             if spatial_ref.Validate() != gdal.CE_None:
@@ -49,19 +76,19 @@ class WriteShapefiles:
             print(f"Error when getting the coordinate system info: {e}")
             return None
 
-    def write_prj_file(self, geotiff_path: str, geotiff_bytes: bytes, prj_file_path: str):
+    # def write_prj_file(self, geotiff_path: str, geotiff_bytes: bytes, prj_file_path: str):
+    def write_prj_file(self, geotiff_path: str, prj_file_path: str):
         """
         Will create the prj file by getting the geo cordinate system from the input tiff file
 
         Parameters
         ----------
         geotiff_path : geotiff_path : Path to the geo tiff used for processing
-        geotiff_bytes: Bytes of the input image
         prj_file_path : Path to the location to create the prj files
         """
         try:
             # Get the coordinate system information
-            wkt = self.__get_coordinate_system_info(geotiff_path, geotiff_bytes)
+            wkt = self.__get_coordinate_system_info(geotiff_path)
             if wkt is not None:
                 # Write the WKT to a .prj file
                 if self.config.GCP_FILESYSTEM is not None:
@@ -134,7 +161,13 @@ class WriteShapefiles:
         shapefile_output_dir_for_image = os.path.join(
             self.config.RAY_OUTPUT_SHAPEFILES_DIR, self.current_timestamp_str, image_name)
         self.write_shapefile(row, shapefile_output_dir_for_image)
+        # self.write_prj_file(
+        #     geotiff_path=row["path"], geotiff_bytes=row["bytes"], prj_file_path=f"{shapefile_output_dir_for_image}.prj")
+        # Write PRJ file using the geotiff file path directly
+
         self.write_prj_file(
-            geotiff_path=row["path"], geotiff_bytes=row["bytes"], prj_file_path=f"{shapefile_output_dir_for_image}.prj")
+            geotiff_path=row["path"],  # Only using path now
+            prj_file_path=f"{shapefile_output_dir_for_image}.prj"
+        )
         row["shapefile_output_dir"] = shapefile_output_dir_for_image
         return row

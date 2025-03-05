@@ -151,9 +151,13 @@ if __name__ == "__main__":
     inferenced_dataset = image_tiles_dataset.map(
         fn=ray_infer_tiles.MaskRCNNPredictor, fn_constructor_kwargs={"config": config}, concurrency=args.concurrency)
 
-    # 4. Start stitching
-    data_per_image = inferenced_dataset.groupby(
-        "image_name").map_groups(ray_tile_and_stitch_util.stitch_shapefile, concurrency=args.concurrency)
+    inferenced_dataset_w_path = inferenced_dataset.map(fn=ray_image_preprocessing.save_binary_to_file,
+                                                       concurrency=args.concurrency)
+
+    # Apply this function before stitching
+    data_per_image = inferenced_dataset_w_path.groupby("image_name")\
+        .map_groups(ray_tile_and_stitch_util.stitch_shapefile, concurrency=args.concurrency)\
+        .select_columns(["image_name", "path", "image_shapefile_results"])
 
     # 5. Write shapefiles
     # Create the output directory if it doesn't exist.
