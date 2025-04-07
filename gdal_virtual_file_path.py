@@ -31,7 +31,21 @@ class GDALVirtualFilePath:
 
     def __enter__(self) -> str:
         dst = gdal.VSIFOpenL(self.vfs_filename, 'wb+')
-        gdal.VSIFWriteL(self.file_bytes, 1, len(self.file_bytes), dst)
+        # avoid size limitations by writing in chunks
+        # gdal.VSIFWriteL(self.file_bytes, 1, len(self.file_bytes), dst)
+
+        chunk_size = 512 * 1024 * 1024  # 512 MB per chunk
+        offset = 0
+
+        while offset < len(self.file_bytes):
+            chunk = self.file_bytes[offset:offset + chunk_size]
+            bytes_written = gdal.VSIFWriteL(chunk, 1, len(chunk), dst)
+
+            if bytes_written != len(chunk):
+                raise RuntimeError(f"Failed to write the full chunk at offset {offset}")
+
+            offset += chunk_size
+
         gdal.VSIFCloseL(dst)
         return self.vfs_filename
 

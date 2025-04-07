@@ -22,6 +22,7 @@ dependencies:
     # For ray pipeline monitoring
     - tqdm
     - opencv-python
-    - ray
+    # pin ray version to avoid "pyarrow.lib.ArrowInvalid: offset overflow while concatenating arrays error"
+    - ray==2.23.0
     - pandas==2.1.4
     - pyarrow

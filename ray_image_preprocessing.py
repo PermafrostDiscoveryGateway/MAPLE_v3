@@ -19,6 +19,8 @@ from skimage.morphology import disk
 from mpl_config import MPL_Config
 import gdal_virtual_file_path as gdal_vfp
 
+import tempfile
+import uuid
 
 
 def cal_water_mask(row: Dict[str, Any], config: MPL_Config) -> Dict[str, Any]:
@@ -122,4 +124,26 @@ def cal_water_mask(row: Dict[str, Any], config: MPL_Config) -> Dict[str, Any]:
     dst_ds.FlushCache()
     del dst_ds
     row["mask"] = mask
+    return row
+
+
+def save_binary_to_file(row: Dict[str, Any]) -> Dict[str, Any]:
+    """Stores 'bytes' as a file and updates 'path'."""
+    # Ensure `bytes` key exists
+    print(row)
+    if "bytes" not in row or not isinstance(row["bytes"], (bytes, bytearray)):
+        raise ValueError(f"Row does not contain valid 'bytes' data: {row}")
+
+    # Define temporary file path
+    temp_dir = tempfile.gettempdir()
+    file_name = f"{uuid.uuid4()}.tif"  # Unique filename
+    file_path = os.path.join(temp_dir, file_name)
+
+    # Save binary data as a file
+    with open(file_path, "wb") as f:
+        f.write(row["bytes"])
+
+    # Replace 'bytes' with file path
+    row["path"] = file_path
+    row["bytes"] = None  # Remove large binary from memory
     return row
